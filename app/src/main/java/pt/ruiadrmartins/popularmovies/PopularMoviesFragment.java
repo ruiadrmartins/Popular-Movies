@@ -211,7 +211,9 @@ public class PopularMoviesFragment extends Fragment {
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
             adapter.clear();
-            movieList = movies;
+            if(movies!=null) {
+                movieList = movies;
+            }
             adapter = new MoviesAdapter(getActivity(), movieList);
             gridView.setAdapter(adapter);
         }
