@@ -1,8 +1,10 @@
 package pt.ruiadrmartins.popularmovies;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,15 +24,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class PopularMoviesFragment extends Fragment {
 
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
     private MoviesAdapter adapter;
     private ArrayList<Movie> movieList;
     private GridView gridView;
+    private SharedPreferences prefs;
+    private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
 
     public PopularMoviesFragment() {
 
@@ -48,6 +49,16 @@ public class PopularMoviesFragment extends Fragment {
         } else {
             movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
         }
+        // Got idea from http://stackoverflow.com/a/8668012
+        // to only register listener when onPause
+        // and unregister on onResume
+        sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener(){
+            @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
+                if (key.equals(getString(R.string.pref_sort_key))) {
+                    updateMovieList();
+                }
+            }
+        };
     }
 
     @Override
@@ -63,9 +74,22 @@ public class PopularMoviesFragment extends Fragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        // register listener when settings activity is launched
+        prefs.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // unregister listener when settings activity is closed
+        prefs.unregisterOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
-        //updateMovieList();
     }
 
     @Override
@@ -76,8 +100,10 @@ public class PopularMoviesFragment extends Fragment {
     }
 
     public void updateMovieList() {
-        FetchMoviesTask fmt = new FetchMoviesTask();
-        fmt.execute("popularity.desc");
+        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
+        FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
+        fetchMoviesTask.execute(sortBy);
     }
 
     public class FetchMoviesTask extends AsyncTask<String,Void,ArrayList<Movie>> {
@@ -86,21 +112,6 @@ public class PopularMoviesFragment extends Fragment {
 
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
-            /*Movie interstellar = new Movie("Interstellar","http://image.tmdb.org/t/p/w500//nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg");
-            List<Movie> example = new ArrayList<>();
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            example.add(interstellar);
-            return example;*/
-
 
             final String FORECAST_BASE_URL = "http://api.themoviedb.org/3/discover/movie?";
             final String SORT_PARAM = "sort_by";
