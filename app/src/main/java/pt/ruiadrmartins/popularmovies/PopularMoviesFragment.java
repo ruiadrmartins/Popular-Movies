@@ -1,5 +1,6 @@
 package pt.ruiadrmartins.popularmovies;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -8,6 +9,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
@@ -41,6 +45,9 @@ public class PopularMoviesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Get shared preferences for activity
+        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
         // Get saved data if it was stored in savedInstanceState
         // or initialize movie list array
         if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_PARCELABLE_KEY)) {
@@ -49,16 +56,19 @@ public class PopularMoviesFragment extends Fragment {
         } else {
             movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
         }
+
         // Got idea from http://stackoverflow.com/a/8668012
         // to only register listener when onPause
         // and unregister on onResume
         sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener(){
-            @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
                 if (key.equals(getString(R.string.pref_sort_key))) {
                     updateMovieList();
                 }
             }
         };
+        setRetainInstance(true);
     }
 
     @Override
@@ -76,7 +86,7 @@ public class PopularMoviesFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        // register listener when settings activity is launched
+        // redgister listener when settings activity is launched
         prefs.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
     }
 
@@ -85,11 +95,7 @@ public class PopularMoviesFragment extends Fragment {
         super.onResume();
         // unregister listener when settings activity is closed
         prefs.unregisterOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
     }
 
     @Override
@@ -100,7 +106,6 @@ public class PopularMoviesFragment extends Fragment {
     }
 
     public void updateMovieList() {
-        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
         FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
         fetchMoviesTask.execute(sortBy);

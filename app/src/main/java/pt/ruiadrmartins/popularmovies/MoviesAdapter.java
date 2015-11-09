@@ -32,7 +32,7 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
         }
 
         ImageView cover = (ImageView) convertView.findViewById(R.id.grid_item_movie_image);
-        Picasso.with(convertView.getContext()).load(movie.coverLink).into(cover);
+        Picasso.with(convertView.getContext()).load(movie.coverLink).placeholder(R.mipmap.ic_launcher).into(cover);
         cover.setContentDescription(movie.movieName);
 
         return convertView;
