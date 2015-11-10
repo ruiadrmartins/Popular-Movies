@@ -9,11 +9,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
 
 import org.json.JSONArray;
@@ -31,11 +29,14 @@ import java.util.ArrayList;
 public class PopularMoviesFragment extends Fragment {
 
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
+    private final String SORT_BY_KEY = "sortBy";
     private MoviesAdapter adapter;
     private ArrayList<Movie> movieList;
     private GridView gridView;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
+
+    private String sortBy;
 
     public PopularMoviesFragment() {
 
@@ -45,30 +46,32 @@ public class PopularMoviesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Temporary solution to orientation problem
+        //setRetainInstance(true);
+
         // Get shared preferences for activity
         prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
 
         // Get saved data if it was stored in savedInstanceState
         // or initialize movie list array
         if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_PARCELABLE_KEY)) {
             movieList = new ArrayList<>();
-            updateMovieList();
+            updateMovieList(sortBy);
         } else {
-            movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
-        }
-
-        // Got idea from http://stackoverflow.com/a/8668012
-        // to only register listener when onPause
-        // and unregister on onResume
-        sharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener(){
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key){
-                if (key.equals(getString(R.string.pref_sort_key))) {
-                    updateMovieList();
+            if(savedInstanceState.containsKey(SORT_BY_KEY)) {
+                if(sortBy != null && savedInstanceState.getString(SORT_BY_KEY).equals(sortBy)) {
+                    movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
                 }
+                else {
+                    movieList = new ArrayList<>();
+                    updateMovieList(sortBy);
+                }
+            } else {
+                // rotation
+                movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
             }
-        };
-        setRetainInstance(true);
+        }
     }
 
     @Override
@@ -80,33 +83,46 @@ public class PopularMoviesFragment extends Fragment {
         adapter = new MoviesAdapter(getActivity(), movieList);
         gridView.setAdapter(adapter);
 
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Movie movieData = adapter.getItem(position);
+
+                Intent intent = new Intent(getActivity(), DetailActivity.class);
+                intent.putExtra("movieData", movieData);
+                startActivity(intent);
+            }
+        });
+
         return rootView;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // redgister listener when settings activity is launched
-        prefs.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+        sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
     }
 
     @Override
     public void onResume() {
         super.onResume();
         // unregister listener when settings activity is closed
-        prefs.unregisterOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
-
+        String newSort = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
+        if(!sortBy.equals(newSort))
+            updateMovieList(newSort);
     }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         // save list data in saveInstanceState to access after rotation
+        outState.putString(SORT_BY_KEY,sortBy);
         outState.putParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY, movieList);
         super.onSaveInstanceState(outState);
     }
 
-    public void updateMovieList() {
-        String sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
+    public void updateMovieList(String sortBy) {
+        //String sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
         FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
         fetchMoviesTask.execute(sortBy);
     }
