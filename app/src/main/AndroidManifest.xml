@@ -10,9 +10,14 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
+        <!--
+            Added singletop launchMode to keep from returning to Main activity and reloading the data
+            http://stackoverflow.com/questions/12276027/how-can-i-return-to-a-parent-activity-correctly
+        -->
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

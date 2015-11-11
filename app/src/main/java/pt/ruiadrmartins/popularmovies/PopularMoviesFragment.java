@@ -28,14 +28,16 @@ import java.util.ArrayList;
 
 public class PopularMoviesFragment extends Fragment {
 
+    private final String LOG_TAG = PopularMoviesFragment.class.getSimpleName();
+
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
     private final String SORT_BY_KEY = "sortBy";
     private MoviesAdapter adapter;
     private ArrayList<Movie> movieList;
     private GridView gridView;
     private SharedPreferences prefs;
-    private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
 
+    // Store sorting on this variable when not saving on onSaveInstanceState()
     private String sortBy;
 
     public PopularMoviesFragment() {
@@ -46,9 +48,6 @@ public class PopularMoviesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Temporary solution to orientation problem
-        //setRetainInstance(true);
-
         // Get shared preferences for activity
         prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
@@ -56,19 +55,22 @@ public class PopularMoviesFragment extends Fragment {
         // Get saved data if it was stored in savedInstanceState
         // or initialize movie list array
         if(savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_LIST_PARCELABLE_KEY)) {
+            // No saved instance of movie list
             movieList = new ArrayList<>();
             updateMovieList(sortBy);
         } else {
             if(savedInstanceState.containsKey(SORT_BY_KEY)) {
                 if(sortBy != null && savedInstanceState.getString(SORT_BY_KEY).equals(sortBy)) {
+                    // Sorting is the same
                     movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
                 }
                 else {
+                    // Sorting changed from Settings
                     movieList = new ArrayList<>();
                     updateMovieList(sortBy);
                 }
             } else {
-                // rotation
+                // Device Rotation
                 movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
             }
         }
@@ -79,6 +81,7 @@ public class PopularMoviesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
+        // Instatiate graphical stuff
         gridView = (GridView) rootView.findViewById(R.id.gridview);
         adapter = new MoviesAdapter(getActivity(), movieList);
         gridView.setAdapter(adapter);
@@ -100,13 +103,15 @@ public class PopularMoviesFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        // Store current sorting setting
         sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // unregister listener when settings activity is closed
+        // check if sorting has changed on settings
+        // when activity is not destroyed
         String newSort = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
         if(!sortBy.equals(newSort))
             updateMovieList(newSort);
@@ -115,14 +120,15 @@ public class PopularMoviesFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        // save list data in saveInstanceState to access after rotation
+        // save list data in saveInstanceState to access after
+        // whatever triggered this
         outState.putString(SORT_BY_KEY,sortBy);
         outState.putParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY, movieList);
         super.onSaveInstanceState(outState);
     }
 
     public void updateMovieList(String sortBy) {
-        //String sortBy = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
+        // Call AsyncTask to execute background fetching
         FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
         fetchMoviesTask.execute(sortBy);
     }
@@ -131,6 +137,11 @@ public class PopularMoviesFragment extends Fragment {
 
         private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
 
+        /**
+         * Adapted from Udacity Sunshine App example
+         * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
+         * Changed to accommodate TMDB API
+         */
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
 
@@ -166,9 +177,6 @@ public class PopularMoviesFragment extends Fragment {
 
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
                     buffer.append(line + "\n");
                 }
 
@@ -177,8 +185,6 @@ public class PopularMoviesFragment extends Fragment {
                 }
 
                 moviesJson = buffer.toString();
-
-                Log.v(":D",moviesJson);
 
                 return getMovieDataFromJson(moviesJson);
 
@@ -203,6 +209,10 @@ public class PopularMoviesFragment extends Fragment {
 
         }
 
+        /**
+         * Process retrieved JSON, build Movie object from data
+         * Build Movie Array with all movies information
+         * */
         private ArrayList<Movie> getMovieDataFromJson(String movieJson) throws JSONException {
 
             final String POSTER_QUAL_HIGH = "w500";
@@ -239,6 +249,9 @@ public class PopularMoviesFragment extends Fragment {
             return result;
         }
 
+        /**
+         * Change movie list from app
+         * */
         @Override
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);

@@ -12,9 +12,10 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 /**
- * Created by ruimartins on 03-11-2015.
+ * ArrayAdapter to insert Movie info into View
  */
 public class MoviesAdapter extends ArrayAdapter<Movie> {
+
     private static final String LOG_TAG = MoviesAdapter.class.getSimpleName();
     
     public MoviesAdapter(Context context, List<Movie> objects) {
@@ -31,6 +32,8 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.grid_item_movie, parent, false);
         }
 
+        // Insert cover into imageview, using Picasso
+        // http://square.github.io/picasso/
         ImageView cover = (ImageView) convertView.findViewById(R.id.grid_item_movie_image);
         Picasso.with(convertView.getContext()).load(movie.coverLink).placeholder(R.mipmap.ic_launcher).into(cover);
         cover.setContentDescription(movie.movieName);

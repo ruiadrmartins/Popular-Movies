@@ -1,6 +1,5 @@
 package pt.ruiadrmartins.popularmovies;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -8,12 +7,9 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
 /**
- * A {@link PreferenceActivity} that presents a set of application settings.
- * <p>
- * See <a href="http://developer.android.com/design/patterns/settings.html">
- * Android Design: Settings</a> for design guidelines and the <a
- * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
- * API Guide</a> for more information on developing a Settings UI.
+ * Adapted from Udacity Sunshine App example
+ * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
+ * Used this example to accommodate Android 2.3 and higher.
  */
 public class SettingsActivity extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener{

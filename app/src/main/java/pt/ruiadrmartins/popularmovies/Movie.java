@@ -4,9 +4,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by ruimartins on 03-11-2015.
+ * Movie structure to store Movie info
+ * Parcelable
  */
-public class Movie implements Parcelable{
+public class Movie implements Parcelable {
 
     String movieName;
     String coverLink;
@@ -22,6 +23,10 @@ public class Movie implements Parcelable{
         this.releaseDate = releaseDate;
     }
 
+    /*
+    Parcelable specific functions
+    Adapted from Udacity Parcelable and onSavedInstance() Webcast
+     */
     public Movie(Parcel parcel) {
         movieName = parcel.readString();
         coverLink = parcel.readString();
