@@ -1,4 +1,4 @@
-package pt.ruiadrmartins.popularmovies;
+package pt.ruiadrmartins.popularmovies.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -9,13 +9,15 @@ import android.os.Parcelable;
  */
 public class Movie implements Parcelable {
 
-    String movieName;
-    String coverLink;
-    String synopsis;
-    double rating;
-    String releaseDate;
+    public int movieId;
+    public String movieName;
+    public String coverLink;
+    public String synopsis;
+    public double rating;
+    public String releaseDate;
 
-    public Movie(String movieName, String coverLink, String synopsis, double rating, String releaseDate) {
+    public Movie(int movieId, String movieName, String coverLink, String synopsis, double rating, String releaseDate) {
+        this.movieId = movieId;
         this.movieName = movieName;
         this.coverLink = coverLink;
         this.synopsis = synopsis;
@@ -28,6 +30,7 @@ public class Movie implements Parcelable {
     Adapted from Udacity Parcelable and onSavedInstance() Webcast
      */
     public Movie(Parcel parcel) {
+        movieId = parcel.readInt();
         movieName = parcel.readString();
         coverLink = parcel.readString();
         synopsis = parcel.readString();
@@ -42,6 +45,7 @@ public class Movie implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(movieId);
         dest.writeString(movieName);
         dest.writeString(coverLink);
         dest.writeString(synopsis);

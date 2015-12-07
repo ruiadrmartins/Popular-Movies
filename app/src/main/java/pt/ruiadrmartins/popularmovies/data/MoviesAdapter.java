@@ -1,4 +1,4 @@
-package pt.ruiadrmartins.popularmovies;
+package pt.ruiadrmartins.popularmovies.data;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+
+import pt.ruiadrmartins.popularmovies.R;
 
 /**
  * ArrayAdapter to insert Movie info into View

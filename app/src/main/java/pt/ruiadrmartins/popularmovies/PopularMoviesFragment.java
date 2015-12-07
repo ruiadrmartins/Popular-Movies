@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +27,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class PopularMoviesFragment extends Fragment {
+import pt.ruiadrmartins.popularmovies.data.Movie;
+import pt.ruiadrmartins.popularmovies.data.MoviesAdapter;
 
-    private final String LOG_TAG = PopularMoviesFragment.class.getSimpleName();
+public class PopularMoviesFragment extends Fragment {
 
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
     private final String SORT_BY_KEY = "sortBy";
@@ -36,6 +38,7 @@ public class PopularMoviesFragment extends Fragment {
     private ArrayList<Movie> movieList;
     private GridView gridView;
     private SharedPreferences prefs;
+    private TextView noMoviesFound;
 
     // Store sorting on this variable when not saving on onSaveInstanceState()
     private String sortBy;
@@ -62,7 +65,7 @@ public class PopularMoviesFragment extends Fragment {
             if(savedInstanceState.containsKey(SORT_BY_KEY)) {
                 if(sortBy != null && savedInstanceState.getString(SORT_BY_KEY).equals(sortBy)) {
                     // Sorting is the same
-                    movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
+                        movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
                 }
                 else {
                     // Sorting changed from Settings
@@ -80,6 +83,8 @@ public class PopularMoviesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        noMoviesFound = (TextView) rootView.findViewById(R.id.no_movies_found);
 
         // Instatiate graphical stuff
         gridView = (GridView) rootView.findViewById(R.id.gridview);
@@ -111,12 +116,10 @@ public class PopularMoviesFragment extends Fragment {
     public void onResume() {
         super.onResume();
         // check if sorting has changed on settings
-        // when activity is not destroyed
         String newSort = prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
         if(!sortBy.equals(newSort))
             updateMovieList(newSort);
     }
-
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -140,7 +143,9 @@ public class PopularMoviesFragment extends Fragment {
         /**
          * Adapted from Udacity Sunshine App example
          * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
-         * Changed to accommodate TMDB API
+         * Changed
+         * @param params
+         * @return
          */
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
@@ -177,6 +182,9 @@ public class PopularMoviesFragment extends Fragment {
 
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
                     buffer.append(line + "\n");
                 }
 
@@ -209,15 +217,12 @@ public class PopularMoviesFragment extends Fragment {
 
         }
 
-        /**
-         * Process retrieved JSON, build Movie object from data
-         * Build Movie Array with all movies information
-         * */
         private ArrayList<Movie> getMovieDataFromJson(String movieJson) throws JSONException {
 
             final String POSTER_QUAL_HIGH = "w500";
             final String POSTER_QUAL_LOW = "w342";
 
+            final String MOVIE_ID = "id";
             final String TITLE_ELEMENT = "title";
             final String POSTER_PATH_ELEMENT = "poster_path";
             final String SYNOPSIS_ELEMENT = "overview";
@@ -235,13 +240,14 @@ public class PopularMoviesFragment extends Fragment {
 
                 JSONObject movieData = resultsArray.getJSONObject(i);
 
+                int movieId = movieData.getInt(MOVIE_ID);
                 String title = movieData.getString(TITLE_ELEMENT);
                 String poster = BASE_POSTER_URL + movieData.getString(POSTER_PATH_ELEMENT);
                 String synopsis = movieData.getString(SYNOPSIS_ELEMENT);
                 double rating = movieData.getDouble(RATING_ELEMENT);
                 String releaseDate = movieData.getString(RELEASE_DATE_ELEMENT);
 
-                Movie movie = new Movie(title,poster,synopsis,rating,releaseDate);
+                Movie movie = new Movie(movieId, title,poster,synopsis,rating,releaseDate);
 
                 result.add(movie);
             }
@@ -258,6 +264,7 @@ public class PopularMoviesFragment extends Fragment {
             adapter.clear();
             if(movies!=null) {
                 movieList = movies;
+                noMoviesFound.setText("");
             }
             adapter = new MoviesAdapter(getActivity(), movieList);
             gridView.setAdapter(adapter);
