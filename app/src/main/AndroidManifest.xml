@@ -11,6 +11,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <provider
+            android:authorities="pt.ruiadrmartins.popularmovies"
+            android:name=".data.MovieProvider"
+            />
         <!--
             Added singletop launchMode to keep from returning to Main activity and reloading the data
             http://stackoverflow.com/questions/12276027/how-can-i-return-to-a-parent-activity-correctly
