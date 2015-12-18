@@ -51,6 +51,7 @@ public class ReviewsActivityFragment extends Fragment {
 
         reviewListView = (ListView) rootView.findViewById(R.id.review_list);
         adapter = new ReviewAdapter(getActivity(),new ArrayList<Review>());
+        reviewListView.setAdapter(adapter);
 
         if(savedInstanceState == null || !savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
             Intent intent = getActivity().getIntent();
@@ -65,7 +66,8 @@ public class ReviewsActivityFragment extends Fragment {
     }
 
     private void fetchReviews(int movieId) {
-        new FetchMovieDataTask().execute(String.valueOf(movieId));
+        FetchReviewTask frt = new FetchReviewTask();
+        frt.execute(movieId);
     }
 
     private void updateReviewList(ArrayList<Review> list) {
@@ -88,33 +90,33 @@ public class ReviewsActivityFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
-    public class FetchMovieDataTask extends AsyncTask<String,Void,ArrayList<Review>> {
+    public class FetchReviewTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
 
         final String MOVIES_BASE_URL = "http://api.themoviedb.org/3/movie/";
         final String REVIEWS_SUFFIX =  "/reviews?";
         final String API_PARAM = "api_key";
 
-        private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
+        private final String LOG_TAG = FetchReviewTask.class.getSimpleName();
 
-        /**
+        /*
          * Adapted from Udacity Sunshine App example
          * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
          * Changed
          * @param params
          * @return
-         */
+        */
         @Override
-        protected ArrayList<Review> doInBackground(String... params) {
+        protected ArrayList<Review> doInBackground(Integer... params) {
 
             String dataJson;
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
-            String movieId = params[0];
+            int movieId = params[0];
 
             try {
-                Uri uri = Uri.parse(MOVIES_BASE_URL + movieId + REVIEWS_SUFFIX).buildUpon()
+                Uri uri = Uri.parse(MOVIES_BASE_URL + String.valueOf(movieId) + REVIEWS_SUFFIX).buildUpon()
                         .appendQueryParameter(API_PARAM, BuildConfig.TMDB_API_KEY)
                         .build();
 
@@ -145,7 +147,7 @@ public class ReviewsActivityFragment extends Fragment {
 
                 dataJson = buffer.toString();
 
-                return getReviewDataFromJson(dataJson);
+                return getReviewDataFromJson(movieId, dataJson);
 
             }  catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
@@ -167,7 +169,7 @@ public class ReviewsActivityFragment extends Fragment {
             }
         }
 
-        private ArrayList<Review> getReviewDataFromJson(String reviewJson) throws JSONException {
+        private ArrayList<Review> getReviewDataFromJson(int movieId, String reviewJson) throws JSONException {
 
             final String REVIEW_AUTHOR = "author";
             final String REVIEW_CONTENT = "content";
@@ -185,7 +187,7 @@ public class ReviewsActivityFragment extends Fragment {
                 String content = reviewData.getString(REVIEW_CONTENT);
                 String url = reviewData.getString(REVIEW_URL);
 
-                Review review = new Review(1,author,content,url);
+                Review review = new Review(movieId,author,content,url);
 
                 result.add(review);
             }
@@ -196,8 +198,15 @@ public class ReviewsActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<Review> list) {
             super.onPostExecute(list);
-            reviewList = list;
-            updateReviewList(list);
+            adapter.clear();
+            if(list!=null && list.size()>0) {
+                reviewList = list;
+                noReviewsFound.setText("");
+                for (Review review: list) {
+                    adapter.add(review);
+                }
+            }
+            //updateReviewList(list);
         }
     }
 }

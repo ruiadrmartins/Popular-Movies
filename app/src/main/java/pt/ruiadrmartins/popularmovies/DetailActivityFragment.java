@@ -3,9 +3,12 @@ package pt.ruiadrmartins.popularmovies;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -21,6 +24,7 @@ public class DetailActivityFragment extends Fragment {
     int movieId;
     Movie movieData;
     public final String MOVIE_PARCELABLE_KEY = "movieParcelable";
+    CheckBox favoritedMovie;
 
     public DetailActivityFragment() {
     }
@@ -71,6 +75,20 @@ public class DetailActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 startTrailersIntent(movieId);
+            }
+        });
+
+        favoritedMovie = (CheckBox) rootView.findViewById(R.id.checkFavorite);
+        favoritedMovie.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    // Store movie, trailers and reviews to database
+
+                } else {
+                    // Remove movie, trailers and reviews from database
+
+                }
             }
         });
 

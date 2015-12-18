@@ -59,6 +59,7 @@ public class TrailersActivityFragment extends Fragment {
             }
         });
         adapter = new TrailerAdapter(getActivity(),new ArrayList<Trailer>());
+        trailerListView.setAdapter(adapter);
 
         if(savedInstanceState == null || !savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
             Intent intent = getActivity().getIntent();
@@ -86,7 +87,8 @@ public class TrailersActivityFragment extends Fragment {
     }
 
     private void fetchTrailers(int movieId) {
-        new FetchMovieDataTask().execute(String.valueOf(movieId));
+        FetchTrailerTask ftt = new FetchTrailerTask();
+        ftt.execute(movieId);
     }
 
     private void updateTrailerList(ArrayList<Trailer> list) {
@@ -109,13 +111,13 @@ public class TrailersActivityFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
-    public class FetchMovieDataTask extends AsyncTask<String,Void,ArrayList<Trailer>> {
+    public class FetchTrailerTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> {
 
         final String MOVIES_BASE_URL = "http://api.themoviedb.org/3/movie/";
         final String TRAILER_SUFFIX = "/videos?";
         final String API_PARAM = "api_key";
 
-        private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
+        private final String LOG_TAG = FetchTrailerTask.class.getSimpleName();
 
         /**
          * Adapted from Udacity Sunshine App example
@@ -125,17 +127,17 @@ public class TrailersActivityFragment extends Fragment {
          * @return
          */
         @Override
-        protected ArrayList<Trailer> doInBackground(String... params) {
+        protected ArrayList<Trailer> doInBackground(Integer... params) {
 
             String dataJson;
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
-            String movieId = params[0];
+            int movieId = params[0];
 
             try {
-                Uri uri = Uri.parse(MOVIES_BASE_URL + movieId + TRAILER_SUFFIX).buildUpon()
+                Uri uri = Uri.parse(MOVIES_BASE_URL + String.valueOf(movieId) + TRAILER_SUFFIX).buildUpon()
                         .appendQueryParameter(API_PARAM, BuildConfig.TMDB_API_KEY)
                         .build();
 
@@ -168,7 +170,7 @@ public class TrailersActivityFragment extends Fragment {
 
                 Log.v("TR",dataJson);
 
-                return getTrailerDataFromJson(dataJson);
+                return getTrailerDataFromJson(movieId, dataJson);
 
             }  catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
@@ -190,7 +192,7 @@ public class TrailersActivityFragment extends Fragment {
             }
         }
 
-        private ArrayList<Trailer> getTrailerDataFromJson(String trailerJson) throws JSONException {
+        private ArrayList<Trailer> getTrailerDataFromJson(int movieId, String trailerJson) throws JSONException {
 
             final String TRAILER_KEY = "key";
             final String TRAILER_NAME = "name";
@@ -208,7 +210,7 @@ public class TrailersActivityFragment extends Fragment {
                 String name = trailerData.getString(TRAILER_NAME);
                 String site = trailerData.getString(TRAILER_SITE);
 
-                Trailer trailer = new Trailer(1,key,name,site);
+                Trailer trailer = new Trailer(movieId,key,name,site);
 
                 result.add(trailer);
             }
@@ -219,8 +221,16 @@ public class TrailersActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<Trailer> list) {
             super.onPostExecute(list);
-            trailerList = list;
-            updateTrailerList(list);
+            adapter.clear();
+            if(list!=null && list.size()>0) {
+                trailerList = list;
+                noTrailersFound.setText("");
+                for (Trailer trailer: list) {
+                    adapter.add(trailer);
+                }
+            }
+
+            //updateTrailerList(list);
         }
     }
 }

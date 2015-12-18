@@ -65,7 +65,7 @@ public class PopularMoviesFragment extends Fragment {
             if(savedInstanceState.containsKey(SORT_BY_KEY)) {
                 if(sortBy != null && savedInstanceState.getString(SORT_BY_KEY).equals(sortBy)) {
                     // Sorting is the same
-                        movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
+                    movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY);
                 }
                 else {
                     // Sorting changed from Settings
@@ -266,8 +266,11 @@ public class PopularMoviesFragment extends Fragment {
                 movieList = movies;
                 noMoviesFound.setText("");
             }
-            adapter = new MoviesAdapter(getActivity(), movieList);
-            gridView.setAdapter(adapter);
+            for (Movie movie: movies) {
+                adapter.add(movie);
+            }
+            //adapter = new MoviesAdapter(getActivity(), movieList);
+            //gridView.setAdapter(adapter);
         }
     }
 }
