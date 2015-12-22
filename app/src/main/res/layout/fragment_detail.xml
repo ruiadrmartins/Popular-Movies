@@ -106,7 +106,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/trailer_label"
-            android:id="@+id/trailer_label"
+            android:id="@+id/trailer_button"
             android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="bold"
             android:paddingTop="@dimen/activity_vertical_margin" />
@@ -115,7 +115,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/reviews_label"
-            android:id="@+id/review_label"
+            android:id="@+id/review_button"
             android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="bold"
             android:paddingTop="@dimen/activity_vertical_margin" />

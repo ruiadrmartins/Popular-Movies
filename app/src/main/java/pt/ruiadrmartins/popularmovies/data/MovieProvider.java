@@ -192,7 +192,6 @@ public class MovieProvider extends ContentProvider {
 
         switch (match) {
             case MOVIES: {
-                normalizeDate(values);
                 long rowId = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
                 if (rowId != -1)
                     returnUri = MovieContract.MovieEntry.buildMovieUri(values.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID));

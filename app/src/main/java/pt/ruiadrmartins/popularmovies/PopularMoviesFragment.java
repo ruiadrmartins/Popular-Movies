@@ -36,6 +36,7 @@ import pt.ruiadrmartins.popularmovies.data.Movie;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.MoviesAdapter;
 import pt.ruiadrmartins.popularmovies.data.MoviesCursorAdapter;
+import pt.ruiadrmartins.popularmovies.data.Utilities;
 
 public class PopularMoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
@@ -45,7 +46,6 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     private MoviesCursorAdapter cursorAdapter;
     private ArrayList<Movie> movieList;
     private GridView gridView;
-    private SharedPreferences prefs;
     private TextView noMoviesFound;
 
     private static final int CURSOR_LOADER_ID = 0;
@@ -62,8 +62,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
 
         // Get shared preferences for activity
-        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        sortBy = currentPreference();
+        sortBy = Utilities.currentPreference(getActivity());
 
         // Get saved data if it was stored in savedInstanceState
         // or initialize movie list array
@@ -106,14 +105,14 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     public void onPause() {
         super.onPause();
         // Store current sorting setting
-        sortBy = currentPreference();
+        sortBy = Utilities.currentPreference(getActivity());
     }
 
     @Override
     public void onResume() {
         super.onResume();
         // check if sorting has changed on settings
-        String newSort = currentPreference();
+        String newSort = Utilities.currentPreference(getActivity());
         if(!sortBy.equals(newSort)) {
             sortBy = newSort;
             updateMovieList();
@@ -131,7 +130,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     }
 
     private void updateViews() {
-        if(sortIsFavorite(sortBy)) {
+        if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             cursorAdapter = new MoviesCursorAdapter(getActivity(), null, 0, CURSOR_LOADER_ID);
             gridView.setAdapter(cursorAdapter);
             gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -165,7 +164,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     }
 
     private void updateMovieList() {
-        if(sortIsFavorite(sortBy)) {
+        if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             // Get movies from database
             Log.v("BBB", "AH HELL NO");
             getLoaderManager().restartLoader(CURSOR_LOADER_ID,null,this);
@@ -177,18 +176,12 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         }
     }
 
-    private boolean sortIsFavorite(String sort) {
-        return sort.equals(getString(R.string.pref_sort_favorites));
-    }
-
-    private String currentPreference() {
-        return prefs.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_default));
-    }
-
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        if(cursorAdapter!=null)
+        sortBy = Utilities.currentPreference(getActivity());
+        if(Utilities.sortIsFavorite(sortBy,getActivity())) {
             getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
+        }
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -207,6 +200,11 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         cursorAdapter.swapCursor(cursor);
+        if(cursor.moveToFirst()){
+            noMoviesFound.setText("");
+        } else {
+            noMoviesFound.setText(getString(R.string.no_movies_found));
+        }
     }
 
     @Override
