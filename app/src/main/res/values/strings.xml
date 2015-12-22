@@ -21,6 +21,9 @@
     <string name="pref_sort_popularity">popularity.desc</string>
     <string name="pref_sort_rating">vote_average.desc</string>
 
+    <string name="pref_sort_favorites_label">Favorites</string>
+    <string name="pref_sort_favorites">favorites</string>
+
     <!-- Detail Labels -->
     <string name="release_date_label">Release Date</string>
     <string name="rating_label">Rating</string>
