@@ -1,13 +1,10 @@
 package pt.ruiadrmartins.popularmovies;
 
-import android.content.ContentUris;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -166,7 +163,6 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     private void updateMovieList() {
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             // Get movies from database
-            Log.v("BBB", "AH HELL NO");
             getLoaderManager().restartLoader(CURSOR_LOADER_ID,null,this);
 
         } else {
