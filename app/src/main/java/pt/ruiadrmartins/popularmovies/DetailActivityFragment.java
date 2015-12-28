@@ -23,11 +23,15 @@ import com.squareup.picasso.Picasso;
 import pt.ruiadrmartins.popularmovies.data.Movie;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Utilities;
+import pt.ruiadrmartins.popularmovies.helper.GetReviewsTask;
+import pt.ruiadrmartins.popularmovies.helper.GetTrailersTask;
 
 /**
  * Detail Activity Fragment
  */
 public class DetailActivityFragment extends Fragment implements LoaderCallbacks<Cursor> {
+
+    private final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
 
     int movieId;
     private Movie movieData;
@@ -152,6 +156,12 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
                     MovieContract.MovieEntry.CONTENT_URI,
                     movieValues
             );
+
+            // Store reviews and trailers as well
+            GetReviewsTask getReviewsTask = new GetReviewsTask(getActivity());
+            getReviewsTask.execute(movieId);
+            GetTrailersTask getTrailersTask = new GetTrailersTask(getActivity());
+            getTrailersTask.execute(movieId);
 
             Toast.makeText(getActivity(), "Movie added to favorites!", Toast.LENGTH_SHORT).show();
         }

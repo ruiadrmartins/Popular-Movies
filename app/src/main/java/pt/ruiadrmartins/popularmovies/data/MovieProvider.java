@@ -291,7 +291,7 @@ public class MovieProvider extends ContentProvider {
                     for (ContentValues value : values) {
                         normalizeDate(value);
                         long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
+                            if (_id != -1) {
                             returnCount++;
                         }
                     }
