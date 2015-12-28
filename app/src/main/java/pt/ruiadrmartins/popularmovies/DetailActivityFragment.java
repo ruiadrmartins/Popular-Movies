@@ -182,6 +182,36 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             } else {
                 Toast.makeText(getActivity(), "Something went wrong...", Toast.LENGTH_SHORT).show();
             }
+
+            // Remove reviews and trailers as well
+            affectedRows = getActivity().getContentResolver().delete(
+                    MovieContract.ReviewEntry.CONTENT_URI,
+                    MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
+                    new String[]{String.valueOf(movieId)}
+            );
+
+            if (affectedRows >= 1) {
+                Toast.makeText(getActivity(), "Reviews deleted from favorites!", Toast.LENGTH_SHORT).show();
+            } else if (affectedRows == 0){
+                Toast.makeText(getActivity(), "No reviews deleted...", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getActivity(), "Something went wrong... Reviews", Toast.LENGTH_SHORT).show();
+            }
+
+            affectedRows = getActivity().getContentResolver().delete(
+                    MovieContract.TrailerEntry.CONTENT_URI,
+                    MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
+                    new String[]{String.valueOf(movieId)}
+            );
+
+            if (affectedRows >= 1) {
+                Toast.makeText(getActivity(), "Trailers deleted from favorites!", Toast.LENGTH_SHORT).show();
+            } else if (affectedRows == 0){
+                Toast.makeText(getActivity(), "No trailers deleted...", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getActivity(), "Something went wrong... Trailers", Toast.LENGTH_SHORT).show();
+            }
+
         } else {
             Toast.makeText(getActivity(), "Movie is not favorite!", Toast.LENGTH_SHORT).show();
         }
