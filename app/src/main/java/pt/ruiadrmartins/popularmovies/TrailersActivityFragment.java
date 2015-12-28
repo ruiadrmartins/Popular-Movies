@@ -1,46 +1,44 @@
 package pt.ruiadrmartins.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
-
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
+import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Trailer;
 import pt.ruiadrmartins.popularmovies.data.TrailerAdapter;
+import pt.ruiadrmartins.popularmovies.data.TrailerCursorAdapter;
 import pt.ruiadrmartins.popularmovies.helper.TrailersFetchHelper;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class TrailersActivityFragment extends Fragment {
+public class TrailersActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     final String TRAILER_PARCELABLE_KEY = "trailerData";
 
-    ListView trailerListView;
-    TrailerAdapter adapter;
-    TextView noTrailersFound;
-    ArrayList<Trailer> trailerList;
+    private static final int TRAILER_LOADER = 0;
+
+    private ListView trailerListView;
+    private TrailerAdapter adapter;
+    private TrailerCursorAdapter cursorAdapter;
+    private TextView noTrailersFound;
+    private ArrayList<Trailer> trailerList;
+
+    private int movieId = 0;
 
     public TrailersActivityFragment() {
     }
@@ -51,24 +49,48 @@ public class TrailersActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_trailers, container, false);
 
         noTrailersFound = (TextView) rootView.findViewById(R.id.no_trailers_found);
-
         trailerListView = (ListView) rootView.findViewById(R.id.trailer_list);
-        trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startVideoIntent(adapter.getItem(position));
-            }
-        });
-        adapter = new TrailerAdapter(getActivity(),new ArrayList<Trailer>());
-        trailerListView.setAdapter(adapter);
 
-        if(savedInstanceState == null || !savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
-            Intent intent = getActivity().getIntent();
-            int movieId = intent.getIntExtra("movieId", 0);
-            fetchTrailers(movieId);
+        Intent intent = getActivity().getIntent();
+        if(intent.hasExtra("movieId")) {
+            adapter = new TrailerAdapter(getActivity(), new ArrayList<Trailer>());
+            trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    startVideoIntent(adapter.getItem(position));
+                }
+            });
+            trailerListView.setAdapter(adapter);
+
+            if (savedInstanceState == null || !savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
+                intent = getActivity().getIntent();
+                movieId = intent.getIntExtra("movieId", 0);
+                fetchTrailers(movieId);
+            } else {
+                trailerList = savedInstanceState.getParcelableArrayList(TRAILER_PARCELABLE_KEY);
+                updateTrailerList(trailerList);
+            }
         } else {
-            trailerList = savedInstanceState.getParcelableArrayList(TRAILER_PARCELABLE_KEY);
-            updateTrailerList(trailerList);
+            cursorAdapter = new TrailerCursorAdapter(getActivity(),null,0,TRAILER_LOADER);
+            trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+
+                    int keyIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_KEY);
+                    String key = cursor.getString(keyIndex);
+
+                    int nameIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_NAME);
+                    String name = cursor.getString(nameIndex);
+
+                    int siteIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_SITE);
+                    String site = cursor.getString(siteIndex);
+
+                    Trailer trailer = new Trailer(movieId,key,name,site);
+                    startVideoIntent(trailer);
+                }
+            });
+            trailerListView.setAdapter(cursorAdapter);
         }
 
         return rootView;
@@ -111,6 +133,49 @@ public class TrailersActivityFragment extends Fragment {
         outState.putParcelableArrayList(TRAILER_PARCELABLE_KEY, trailerList);
         super.onSaveInstanceState(outState);
     }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Intent intent = getActivity().getIntent();
+        if(!intent.hasExtra("movieId")) {
+            movieId = Integer.valueOf(MovieContract.TrailerEntry.getMovieIdFromUri(intent.getData()));
+            if (Utilities.isStored(getActivity(), MovieContract.TrailerEntry.TABLE_NAME, movieId)) {
+                getLoaderManager().initLoader(TRAILER_LOADER, null, this);
+            }
+        }
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Intent intent = getActivity().getIntent();
+        if (intent == null) {
+            return null;
+        }
+
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(),
+                intent.getData(),
+                null,
+                null,
+                null,
+                null
+        );    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        cursorAdapter.swapCursor(data);
+        if(data.moveToFirst()){
+            noTrailersFound.setText("");
+        } else {
+            noTrailersFound.setText(getString(R.string.no_trailers_found));
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) { }
 
     public class FetchTrailerTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> {
 

@@ -33,7 +33,6 @@ import pt.ruiadrmartins.popularmovies.data.Movie;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.MoviesAdapter;
 import pt.ruiadrmartins.popularmovies.data.MoviesCursorAdapter;
-import pt.ruiadrmartins.popularmovies.data.Utilities;
 
 public class PopularMoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 

@@ -1,32 +1,42 @@
 package pt.ruiadrmartins.popularmovies;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 
+import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Review;
 import pt.ruiadrmartins.popularmovies.data.ReviewAdapter;
+import pt.ruiadrmartins.popularmovies.data.ReviewCursorAdapter;
 import pt.ruiadrmartins.popularmovies.helper.ReviewsFetchHelper;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ReviewsActivityFragment extends Fragment {
+public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
     final String REVIEW_PARCELABLE_KEY = "reviewData";
 
-    ListView reviewListView;
-    ReviewAdapter adapter;
-    TextView noReviewsFound;
-    ArrayList<Review> reviewList;
+    private static final int REVIEW_LOADER = 0;
+
+    private ListView reviewListView;
+    private ReviewAdapter adapter;
+    private ReviewCursorAdapter cursorAdapter;
+    private TextView noReviewsFound;
+    private ArrayList<Review> reviewList;
+
+    private int movieId = 0;
 
     public ReviewsActivityFragment() {
     }
@@ -37,18 +47,24 @@ public class ReviewsActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_reviews, container, false);
 
         noReviewsFound = (TextView) rootView.findViewById(R.id.no_reviews_found);
-
         reviewListView = (ListView) rootView.findViewById(R.id.review_list);
-        adapter = new ReviewAdapter(getActivity(),new ArrayList<Review>());
-        reviewListView.setAdapter(adapter);
 
-        if(savedInstanceState == null || !savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
-            Intent intent = getActivity().getIntent();
-            int movieId = intent.getIntExtra("movieId", 0);
-            fetchReviews(movieId);
+        Intent intent = getActivity().getIntent();
+        if(intent.hasExtra("movieId")) {
+            adapter = new ReviewAdapter(getActivity(), new ArrayList<Review>());
+            reviewListView.setAdapter(adapter);
+
+            if (savedInstanceState == null || !savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
+                intent = getActivity().getIntent();
+                movieId = intent.getIntExtra("movieId", 0);
+                fetchReviews(movieId);
+            } else {
+                reviewList = savedInstanceState.getParcelableArrayList(REVIEW_PARCELABLE_KEY);
+                updateReviewList(reviewList);
+            }
         } else {
-            reviewList = savedInstanceState.getParcelableArrayList(REVIEW_PARCELABLE_KEY);
-            updateReviewList(reviewList);
+            cursorAdapter = new ReviewCursorAdapter(getActivity(),null,0,REVIEW_LOADER);
+            reviewListView.setAdapter(cursorAdapter);
         }
 
         return rootView;
@@ -78,6 +94,50 @@ public class ReviewsActivityFragment extends Fragment {
         outState.putParcelableArrayList(REVIEW_PARCELABLE_KEY, reviewList);
         super.onSaveInstanceState(outState);
     }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Intent intent = getActivity().getIntent();
+        if(!intent.hasExtra("movieId")) {
+            movieId = Integer.valueOf(MovieContract.ReviewEntry.getMovieIdFromUri(intent.getData()));
+            if (Utilities.isStored(getActivity(), MovieContract.ReviewEntry.TABLE_NAME, movieId)) {
+                getLoaderManager().initLoader(REVIEW_LOADER, null, this);
+            }
+        }
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Intent intent = getActivity().getIntent();
+        if (intent == null) {
+            return null;
+        }
+
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(),
+                intent.getData(),
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        cursorAdapter.swapCursor(data);
+        if(data.moveToFirst()){
+            noReviewsFound.setText("");
+        } else {
+            noReviewsFound.setText(getString(R.string.no_reviews_found));
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) { }
 
     public class FetchReviewTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
 

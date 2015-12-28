@@ -22,7 +22,6 @@ import com.squareup.picasso.Picasso;
 
 import pt.ruiadrmartins.popularmovies.data.Movie;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
-import pt.ruiadrmartins.popularmovies.data.Utilities;
 import pt.ruiadrmartins.popularmovies.helper.GetReviewsTask;
 import pt.ruiadrmartins.popularmovies.helper.GetTrailersTask;
 
@@ -108,7 +107,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             }
         });
 
-        if(isStored(MovieContract.MovieEntry.TABLE_NAME)) favoritedMovie.setChecked(true);
+        if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) favoritedMovie.setChecked(true);
         favoritedMovie.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -123,7 +122,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     private void startReviewsIntent(int movieId) {
         Intent intent = new Intent(getActivity(), ReviewsActivity.class);
-        if (isStored(MovieContract.MovieEntry.TABLE_NAME)) {
+        if (Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.ReviewEntry.buildReviewUri(movieId));
         } else {
             intent.putExtra("movieId", movieId);
@@ -133,7 +132,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     private void startTrailersIntent(int movieId) {
         Intent intent = new Intent(getActivity(), TrailersActivity.class);
-        if(isStored(MovieContract.MovieEntry.TABLE_NAME)) {
+        if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.TrailerEntry.buildTrailerUri(movieId));
         } else {
             intent.putExtra("movieId", movieId);
@@ -142,7 +141,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     }
 
     private void addMovie(String name, String cover, String synopsis, double rating, String releaseDate){
-        if(!isStored(MovieContract.MovieEntry.TABLE_NAME)) {
+        if(!Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             ContentValues movieValues = new ContentValues();
 
             movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movieId);
@@ -168,7 +167,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     }
 
     private void removeMovie() {
-        if(isStored(MovieContract.MovieEntry.TABLE_NAME)) {
+        if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             int affectedRows = getActivity().getContentResolver().delete(
                     MovieContract.MovieEntry.CONTENT_URI,
                     MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
@@ -215,57 +214,6 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         } else {
             Toast.makeText(getActivity(), "Movie is not favorite!", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private Cursor queryStoredMovie() {
-        return getActivity().getContentResolver().query(
-                MovieContract.MovieEntry.CONTENT_URI,
-                null,
-                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{String.valueOf(movieId)},
-                null);
-    }
-
-    private Cursor queryStoredTrailers() {
-        return getActivity().getContentResolver().query(
-                MovieContract.TrailerEntry.CONTENT_URI,
-                null,
-                MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{String.valueOf(movieId)},
-                null);
-    }
-
-    private Cursor queryStoredReviews() {
-        return getActivity().getContentResolver().query(
-                MovieContract.ReviewEntry.CONTENT_URI,
-                null,
-                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{String.valueOf(movieId)},
-                null);
-    }
-
-    private boolean isStored(String table) {
-        Cursor cursor;
-        switch(table){
-            case MovieContract.MovieEntry.TABLE_NAME:
-                cursor = queryStoredMovie();
-                break;
-            case MovieContract.ReviewEntry.TABLE_NAME:
-                cursor = queryStoredReviews();
-                break;
-            case MovieContract.TrailerEntry.TABLE_NAME:
-                cursor = queryStoredTrailers();
-                break;
-            default:
-                cursor = null;
-                break;
-        }
-        if(cursor != null)
-            if (cursor.moveToFirst()) {
-                cursor.close();
-                return true;
-            } else cursor.close();
-        return false;
     }
 
     @Override
