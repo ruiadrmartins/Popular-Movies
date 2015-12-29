@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="http://schemas.android.com/tools">
     <!-- App Title Strings -->
     <string name="app_name">Popular Movies</string>
     <string name="title_activity_settings">Settings</string>
@@ -35,6 +35,8 @@
     <string name="no_reviews_found">No reviews found</string>
     <string name="no_trailers_found">No trailers found</string>
     <string name="no_movies_found">No movies found</string>
-    <string name="out_of_ten">/10.0</string>
+
+    <!-- String Formatting -->
+    <string name="format_rating"><xliff:g id="rating">%1$.1f</xliff:g>/10.0</string>
 
 </resources>

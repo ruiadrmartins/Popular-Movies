@@ -88,7 +88,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
         detailTitle.setText(name);
         detailDate.setText(releaseDate);
-        String ratingValue = String.valueOf(rating) + detailRating.getText();
+        String ratingValue = getString(R.string.format_rating, rating);
         detailRating.setText(ratingValue);
         detailSynopsis.setText(synopsis);
         Picasso.with(view.getContext()).load(coverLink).placeholder(R.mipmap.ic_launcher).into(cover);

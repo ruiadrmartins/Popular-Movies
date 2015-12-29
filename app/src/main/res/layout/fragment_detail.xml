@@ -71,7 +71,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/detail_movie_rating"
                     android:textAppearance="?android:textAppearanceSmall"
-                    android:text="@string/out_of_ten"/>
+                    android:text="@string/format_rating"/>
 
             </LinearLayout>
 
