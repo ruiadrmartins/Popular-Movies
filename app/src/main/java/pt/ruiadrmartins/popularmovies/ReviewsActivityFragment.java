@@ -50,13 +50,13 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
         reviewListView = (ListView) rootView.findViewById(R.id.review_list);
 
         Intent intent = getActivity().getIntent();
-        if(intent.hasExtra("movieId")) {
+        if(intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
             adapter = new ReviewAdapter(getActivity(), new ArrayList<Review>());
             reviewListView.setAdapter(adapter);
 
             if (savedInstanceState == null || !savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
                 intent = getActivity().getIntent();
-                movieId = intent.getIntExtra("movieId", 0);
+                movieId = intent.getIntExtra(DetailActivityFragment.DETAIL_MOVIE_ID, 0);
                 fetchReviews(movieId);
             } else {
                 reviewList = savedInstanceState.getParcelableArrayList(REVIEW_PARCELABLE_KEY);
@@ -98,7 +98,7 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         Intent intent = getActivity().getIntent();
-        if(!intent.hasExtra("movieId")) {
+        if(!intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
             movieId = Integer.valueOf(MovieContract.ReviewEntry.getMovieIdFromUri(intent.getData()));
             if (Utilities.isStored(getActivity(), MovieContract.ReviewEntry.TABLE_NAME, movieId)) {
                 getLoaderManager().initLoader(REVIEW_LOADER, null, this);

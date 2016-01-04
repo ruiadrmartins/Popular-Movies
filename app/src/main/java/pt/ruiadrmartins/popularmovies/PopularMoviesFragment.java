@@ -2,12 +2,14 @@ package pt.ruiadrmartins.popularmovies;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +28,9 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
 
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
     private final String SORT_BY_KEY = "sortBy";
+
+    final static String MOVIE_DATA_KEY = "movieData";
+
     private MoviesAdapter adapter;
     private MoviesCursorAdapter cursorAdapter;
     private ArrayList<Movie> movieList;
@@ -36,6 +41,11 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
 
     // Store sorting on this variable when not saving on onSaveInstanceState()
     private String sortBy;
+
+    public interface Callback {
+        void onItemSelected(Uri uri);
+        void onItemSelected(Movie movie);
+    }
 
     public PopularMoviesFragment() {
 
@@ -115,7 +125,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         super.onSaveInstanceState(outState);
     }
 
-    private void updateViews() {
+    void updateViews() {
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             cursorAdapter = new MoviesCursorAdapter(getActivity(), null, 0, CURSOR_LOADER_ID);
             gridView.setAdapter(cursorAdapter);
@@ -126,9 +136,11 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                     if (cursor != null) {
                         int movieIdIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
                         int movieId = cursor.getInt(movieIdIndex);
-                        Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        /*Intent intent = new Intent(getActivity(), DetailActivity.class)
                                 .setData(MovieContract.MovieEntry.buildMovieUri(movieId));
-                        startActivity(intent);
+                        startActivity(intent);*/
+                        ((Callback) getActivity())
+                                .onItemSelected(MovieContract.MovieEntry.buildMovieUri(movieId));
                     }
                 }
             });
@@ -141,15 +153,16 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Movie movieData = adapter.getItem(position);
 
-                    Intent intent = new Intent(getActivity(), DetailActivity.class);
-                    intent.putExtra("movieData", movieData);
-                    startActivity(intent);
+                    /*Intent intent = new Intent(getActivity(), DetailActivity.class);
+                    intent.putExtra(MOVIE_DATA_KEY, movieData);
+                    startActivity(intent);*/
+                    ((Callback) getActivity()).onItemSelected(movieData);
                 }
             });
         }
     }
 
-    private void updateMovieList() {
+    void updateMovieList() {
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             // Get movies from database
             getLoaderManager().restartLoader(CURSOR_LOADER_ID,null,this);

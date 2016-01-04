@@ -3,11 +3,13 @@ package pt.ruiadrmartins.popularmovies;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,17 +34,21 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     private final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
 
-    int movieId;
+    static final String DETAIL_URI = "URI";
+    private Uri uri;
+    static final String DETAIL_MOVIE_ID = "movieId";
+    private int movieId;
+
     private Movie movieData;
-    public final String MOVIE_PARCELABLE_KEY = "movieParcelable";
+    public static final String MOVIE_PARCELABLE_KEY = "movieParcelable";
 
     private TextView detailTitle;
-    TextView detailDate;
-    TextView detailRating;
-    TextView detailSynopsis;
-    ImageView cover;
-    Button reviewButton;
-    Button trailerButton;
+    private TextView detailDate;
+    private TextView detailRating;
+    private TextView detailSynopsis;
+    private ImageView cover;
+    private Button reviewButton;
+    private Button trailerButton;
 
     private CheckBox favoritedMovie;
     private String sortBy;
@@ -55,6 +61,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
         detailTitle = (TextView) rootView.findViewById(R.id.detail_movie_title);
@@ -67,18 +74,26 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         favoritedMovie = (CheckBox) rootView.findViewById(R.id.checkFavorite);
 
         sortBy = Utilities.currentPreference(getActivity());
-        if(!Utilities.sortIsFavorite(sortBy,getActivity())) {
 
-            if (savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_PARCELABLE_KEY)) {
-                // Ger all info on a Parcelable Movie object
-                Intent intent = getActivity().getIntent();
-                movieData = intent.getParcelableExtra("movieData");
-            } else {
-                movieData = savedInstanceState.getParcelable(MOVIE_PARCELABLE_KEY);
+        Bundle arguments = getArguments();
+        if(arguments!=null) {
+            uri = arguments.getParcelable(DetailActivityFragment.DETAIL_URI);
+            movieData = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_ID);
+
+            if (!Utilities.sortIsFavorite(sortBy, getActivity())) {
+                if (savedInstanceState == null || !savedInstanceState.containsKey(MOVIE_PARCELABLE_KEY)) {
+                    // Ger all info on a Parcelable Movie object
+                    Intent intent = getActivity().getIntent();
+                    if(intent.getParcelableExtra(PopularMoviesFragment.MOVIE_DATA_KEY)!=null) {
+                        movieData = intent.getParcelableExtra(PopularMoviesFragment.MOVIE_DATA_KEY);
+                    }
+                } else {
+                    movieData = savedInstanceState.getParcelable(MOVIE_PARCELABLE_KEY);
+                }
+
+                movieId = movieData.movieId;
+                updateViews(movieData.movieName, movieData.releaseDate, movieData.rating, movieData.synopsis, movieData.coverLink, rootView);
             }
-
-            movieId = movieData.movieId;
-            updateViews(movieData.movieName, movieData.releaseDate, movieData.rating, movieData.synopsis, movieData.coverLink, rootView);
         }
 
         return rootView;
@@ -125,7 +140,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         if (Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.ReviewEntry.buildReviewUri(movieId));
         } else {
-            intent.putExtra("movieId", movieId);
+            intent.putExtra(DETAIL_MOVIE_ID, movieId);
         }
         startActivity(intent);
     }
@@ -135,7 +150,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.TrailerEntry.buildTrailerUri(movieId));
         } else {
-            intent.putExtra("movieId", movieId);
+            intent.putExtra(DETAIL_MOVIE_ID, movieId);
         }
         startActivity(intent);
     }
@@ -235,21 +250,21 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
-        }
+        if(null != uri) {
 
-        // Now create and return a CursorLoader that will take care of
-        // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                null,
-                null,
-                null,
-                null
-        );
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    //intent.getData(),
+                    uri,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
 
     @Override

@@ -52,7 +52,7 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
         trailerListView = (ListView) rootView.findViewById(R.id.trailer_list);
 
         Intent intent = getActivity().getIntent();
-        if(intent.hasExtra("movieId")) {
+        if(intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
             adapter = new TrailerAdapter(getActivity(), new ArrayList<Trailer>());
             trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -64,7 +64,7 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
 
             if (savedInstanceState == null || !savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
                 intent = getActivity().getIntent();
-                movieId = intent.getIntExtra("movieId", 0);
+                movieId = intent.getIntExtra(DetailActivityFragment.DETAIL_MOVIE_ID, 0);
                 fetchTrailers(movieId);
             } else {
                 trailerList = savedInstanceState.getParcelableArrayList(TRAILER_PARCELABLE_KEY);
@@ -137,7 +137,7 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         Intent intent = getActivity().getIntent();
-        if(!intent.hasExtra("movieId")) {
+        if(!intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
             movieId = Integer.valueOf(MovieContract.TrailerEntry.getMovieIdFromUri(intent.getData()));
             if (Utilities.isStored(getActivity(), MovieContract.TrailerEntry.TABLE_NAME, movieId)) {
                 getLoaderManager().initLoader(TRAILER_LOADER, null, this);
