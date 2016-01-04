@@ -1,6 +1,5 @@
 package pt.ruiadrmartins.popularmovies;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -9,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +26,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
 
     private final String MOVIE_LIST_PARCELABLE_KEY = "movieList";
     private final String SORT_BY_KEY = "sortBy";
+    private final String SELECTED_ITEM_KEY = "selectedItem";
 
     final static String MOVIE_DATA_KEY = "movieData";
 
@@ -36,6 +35,8 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     private ArrayList<Movie> movieList;
     private GridView gridView;
     private TextView noMoviesFound;
+
+    private int selectedItem = 0;
 
     private static final int CURSOR_LOADER_ID = 0;
 
@@ -94,6 +95,12 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
 
         updateViews();
 
+        if(savedInstanceState != null && savedInstanceState.containsKey(SELECTED_ITEM_KEY)) {
+            selectedItem = savedInstanceState.getInt(SELECTED_ITEM_KEY);
+            if(gridView!=null)
+                gridView.smoothScrollToPosition(selectedItem);
+        }
+
         return rootView;
     }
 
@@ -122,6 +129,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         // whatever triggered this
         outState.putString(SORT_BY_KEY,sortBy);
         outState.putParcelableArrayList(MOVIE_LIST_PARCELABLE_KEY, movieList);
+        outState.putInt(SELECTED_ITEM_KEY,selectedItem);
         super.onSaveInstanceState(outState);
     }
 
@@ -141,6 +149,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                         startActivity(intent);*/
                         ((Callback) getActivity())
                                 .onItemSelected(MovieContract.MovieEntry.buildMovieUri(movieId));
+                        selectedItem = position;
                     }
                 }
             });
@@ -157,6 +166,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                     intent.putExtra(MOVIE_DATA_KEY, movieData);
                     startActivity(intent);*/
                     ((Callback) getActivity()).onItemSelected(movieData);
+                    selectedItem = position;
                 }
             });
         }
@@ -198,6 +208,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         cursorAdapter.swapCursor(cursor);
+        gridView.smoothScrollToPosition(selectedItem);
         if(cursor.moveToFirst()){
             noMoviesFound.setText("");
         } else {
