@@ -9,12 +9,14 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+
 import java.util.ArrayList;
 
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
@@ -28,6 +30,9 @@ import pt.ruiadrmartins.popularmovies.helper.TrailersFetchHelper;
  */
 public class TrailersActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    final static String TRAILERS_MOVIE_ID = "trailersMovieId";
+    final static String TRAILERS_MOVIE_URI = "trailersMovieURI";
+
     final String TRAILER_PARCELABLE_KEY = "trailerData";
 
     private static final int TRAILER_LOADER = 0;
@@ -39,6 +44,7 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
     private ArrayList<Trailer> trailerList;
 
     private int movieId = 0;
+    private Uri uri;
 
     public TrailersActivityFragment() {
     }
@@ -51,46 +57,54 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
         noTrailersFound = (TextView) rootView.findViewById(R.id.no_trailers_found);
         trailerListView = (ListView) rootView.findViewById(R.id.trailer_list);
 
-        Intent intent = getActivity().getIntent();
-        if(intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
-            adapter = new TrailerAdapter(getActivity(), new ArrayList<Trailer>());
-            trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    startVideoIntent(adapter.getItem(position));
-                }
-            });
-            trailerListView.setAdapter(adapter);
+        // Fetch arguments from bundle arguments
+        Bundle arguments = getArguments();
 
-            if (savedInstanceState == null || !savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
-                intent = getActivity().getIntent();
-                movieId = intent.getIntExtra(DetailActivityFragment.DETAIL_MOVIE_ID, 0);
-                fetchTrailers(movieId);
+        // If arguments exist
+        if (arguments!= null) {
+            // If fetch data from API
+            if (arguments.containsKey(TRAILERS_MOVIE_ID)) {
+                adapter = new TrailerAdapter(getActivity(), new ArrayList<Trailer>());
+                trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        startVideoIntent(adapter.getItem(position));
+                    }
+                });
+                trailerListView.setAdapter(adapter);
+
+                // If data was saved
+                if (savedInstanceState != null && savedInstanceState.containsKey(TRAILER_PARCELABLE_KEY)) {
+                    trailerList = savedInstanceState.getParcelableArrayList(TRAILER_PARCELABLE_KEY);
+                    updateTrailerList(trailerList);
+                } else {
+                    movieId = arguments.getInt(TRAILERS_MOVIE_ID);
+                    fetchTrailers(movieId);
+                }
             } else {
-                trailerList = savedInstanceState.getParcelableArrayList(TRAILER_PARCELABLE_KEY);
-                updateTrailerList(trailerList);
+                // If data is local
+                uri = arguments.getParcelable(TRAILERS_MOVIE_URI);
+                cursorAdapter = new TrailerCursorAdapter(getActivity(), null, 0, TRAILER_LOADER);
+                trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+
+                        int keyIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_KEY);
+                        String key = cursor.getString(keyIndex);
+
+                        int nameIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_NAME);
+                        String name = cursor.getString(nameIndex);
+
+                        int siteIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_SITE);
+                        String site = cursor.getString(siteIndex);
+
+                        Trailer trailer = new Trailer(movieId, key, name, site);
+                        startVideoIntent(trailer);
+                    }
+                });
+                trailerListView.setAdapter(cursorAdapter);
             }
-        } else {
-            cursorAdapter = new TrailerCursorAdapter(getActivity(),null,0,TRAILER_LOADER);
-            trailerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-
-                    int keyIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_KEY);
-                    String key = cursor.getString(keyIndex);
-
-                    int nameIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_NAME);
-                    String name = cursor.getString(nameIndex);
-
-                    int siteIndex = cursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_SITE);
-                    String site = cursor.getString(siteIndex);
-
-                    Trailer trailer = new Trailer(movieId,key,name,site);
-                    startVideoIntent(trailer);
-                }
-            });
-            trailerListView.setAdapter(cursorAdapter);
         }
 
         return rootView;
@@ -136,33 +150,35 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Intent intent = getActivity().getIntent();
-        if(!intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
-            movieId = Integer.valueOf(MovieContract.TrailerEntry.getMovieIdFromUri(intent.getData()));
-            if (Utilities.isStored(getActivity(), MovieContract.TrailerEntry.TABLE_NAME, movieId)) {
-                getLoaderManager().initLoader(TRAILER_LOADER, null, this);
-            }
+        Bundle arguments = getArguments();
+        // If data is local
+        if (arguments != null && arguments.containsKey(TRAILERS_MOVIE_URI)) {
+            uri = arguments.getParcelable(TRAILERS_MOVIE_URI);
+            movieId = Integer.valueOf(MovieContract.TrailerEntry.getMovieIdFromUri(uri));
+            getLoaderManager().initLoader(TRAILER_LOADER, null, this);
         }
+
         super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
-        }
+        if (null != uri) {
 
-        // Now create and return a CursorLoader that will take care of
-        // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                null,
-                null,
-                null,
-                null
-        );    }
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    //intent.getData(),
+                    uri,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
+    }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {

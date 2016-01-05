@@ -28,8 +28,6 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     private final String SORT_BY_KEY = "sortBy";
     private final String SELECTED_ITEM_KEY = "selectedItem";
 
-    final static String MOVIE_DATA_KEY = "movieData";
-
     private MoviesAdapter adapter;
     private MoviesCursorAdapter cursorAdapter;
     private ArrayList<Movie> movieList;
