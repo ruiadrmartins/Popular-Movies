@@ -6,14 +6,16 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import pt.ruiadrmartins.popularmovies.data.Movie;
+
 
 public class MainActivity extends ActionBarActivity implements PopularMoviesFragment.Callback, DetailActivityFragment.Callback{
 
-    private boolean mTwoPane;
     private static final String DETAIL_FRAGMENT_TAG = "DFTAG";
     private static final String TRAILERS_FRAGMENT_TAG = "TFTAG";
+    private static final String REVIEWS_FRAGMENT_TAG = "RFTAG";
+
+    private boolean mTwoPane;
     private String sortBy;
 
     @Override
@@ -72,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements PopularMoviesFrag
         if(mTwoPane){
             // Launch Detail FRAGMENT
             Bundle args = new Bundle();
-            args.putParcelable(DetailActivityFragment.DETAIL_URI, uri);
+            args.putParcelable(DetailActivityFragment.DETAIL_MOVIE_URI, uri);
 
             DetailActivityFragment detailActivityFragment = new DetailActivityFragment();
             detailActivityFragment.setArguments(args);
@@ -114,7 +116,7 @@ public class MainActivity extends ActionBarActivity implements PopularMoviesFrag
 
             // Launch Detail ACTIVITY
             Intent intent = new Intent(this, DetailActivity.class)
-                    .putExtra(DetailActivity.MOVIE_ID_KEY, movie);
+                    .putExtra(DetailActivity.DETAIL_MOVIE_ID_KEY, movie);
             startActivity(intent);
         }
     }
@@ -181,11 +183,29 @@ public class MainActivity extends ActionBarActivity implements PopularMoviesFrag
 
     @Override
     public void onReviewsSelected(int movieId) {
+        // Launch Review FRAGMENT
+        Bundle args = new Bundle();
+        args.putInt(ReviewsActivityFragment.REVIEWS_MOVIE_ID, movieId);
 
+        ReviewsActivityFragment reviewsActivityFragment = new ReviewsActivityFragment();
+        reviewsActivityFragment.setArguments(args);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_detail, reviewsActivityFragment, REVIEWS_FRAGMENT_TAG)
+                .commit();
     }
 
     @Override
     public void onReviewsSelected(Uri uri) {
+        // Launch Review FRAGMENT
+        Bundle args = new Bundle();
+        args.putParcelable(ReviewsActivityFragment.REVIEWS_MOVIE_URI, uri);
 
+        ReviewsActivityFragment reviewsActivityFragment = new ReviewsActivityFragment();
+        reviewsActivityFragment.setArguments(args);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_detail, reviewsActivityFragment, REVIEWS_FRAGMENT_TAG)
+                .commit();
     }
 }

@@ -47,7 +47,6 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     }
 
     public PopularMoviesFragment() {
-
     }
 
     @Override

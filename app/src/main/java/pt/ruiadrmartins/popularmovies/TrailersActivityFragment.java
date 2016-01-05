@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,10 +31,7 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
 
     final static String TRAILERS_MOVIE_ID = "trailersMovieId";
     final static String TRAILERS_MOVIE_URI = "trailersMovieURI";
-
-    final String TRAILER_PARCELABLE_KEY = "trailerData";
-
-    private static final int TRAILER_LOADER = 0;
+    final static String TRAILER_PARCELABLE_KEY = "trailerData";
 
     private ListView trailerListView;
     private TrailerAdapter adapter;
@@ -43,7 +39,9 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
     private TextView noTrailersFound;
     private ArrayList<Trailer> trailerList;
 
-    private int movieId = 0;
+    private static final int TRAILER_LOADER = 0;
+
+    private int movieId;
     private Uri uri;
 
     public TrailersActivityFragment() {

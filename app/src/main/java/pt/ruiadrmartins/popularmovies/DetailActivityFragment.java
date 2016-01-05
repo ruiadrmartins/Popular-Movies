@@ -33,13 +33,13 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     private final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
 
-    static final String DETAIL_URI = "DetailURI";
+    static final String DETAIL_MOVIE_URI = "DetailURI";
     static final String DETAIL_MOVIE_ID = "movieId";
+    static final String MOVIE_PARCELABLE_KEY = "movieParcelable";
+
     private int movieId;
     private Uri uri;
-
     private Movie movieData;
-    public static final String MOVIE_PARCELABLE_KEY = "movieParcelable";
 
     private TextView detailTitle;
     private TextView detailDate;
@@ -48,9 +48,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     private ImageView cover;
     private Button reviewButton;
     private Button trailerButton;
-
     private CheckBox favoritedMovie;
-    private String sortBy;
 
     private static final int DETAIL_LOADER = 0;
 
@@ -79,15 +77,13 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         trailerButton = (Button) rootView.findViewById(R.id.trailer_button);
         favoritedMovie = (CheckBox) rootView.findViewById(R.id.checkFavorite);
 
-        sortBy = Utilities.currentPreference(getActivity());
-
         // Fetch bundled arguments
         Bundle arguments = getArguments();
         // If arguments exist
         if(arguments!=null) {
             // If fetch local data
-            if (arguments.containsKey(DetailActivityFragment.DETAIL_URI)) {
-                uri = arguments.getParcelable(DetailActivityFragment.DETAIL_URI);
+            if (arguments.containsKey(DetailActivityFragment.DETAIL_MOVIE_URI)) {
+                uri = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_URI);
             } else if (arguments.containsKey(DetailActivityFragment.DETAIL_MOVIE_ID)) {
                 // If data is stored in savedState
                 if (savedInstanceState != null && savedInstanceState.containsKey(MOVIE_PARCELABLE_KEY)) {
@@ -142,13 +138,19 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     }
 
     private void startReviewsIntent(int movieId) {
-        Intent intent = new Intent(getActivity(), ReviewsActivity.class);
+        /*Intent intent = new Intent(getActivity(), ReviewsActivity.class);
         if (Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.ReviewEntry.buildReviewUri(movieId));
         } else {
             intent.putExtra(DETAIL_MOVIE_ID, movieId);
         }
-        startActivity(intent);
+        startActivity(intent);*/
+        if(Utilities.isStored(getActivity(),MovieContract.MovieEntry.TABLE_NAME,movieId)) {
+            ((Callback) getActivity()).onReviewsSelected(MovieContract.ReviewEntry.buildReviewUri(movieId));
+        } else {
+            // If fetch data from API
+            ((Callback) getActivity()).onReviewsSelected(movieId);
+        }
     }
 
     private void startTrailersIntent(int movieId) {
@@ -250,8 +252,8 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         // Get bundle arguments
         Bundle arguments = getArguments();
         // If movie is stored locally
-        if(arguments!=null && arguments.containsKey(DETAIL_URI)) {
-            uri = arguments.getParcelable(DETAIL_URI);
+        if(arguments!=null && arguments.containsKey(DETAIL_MOVIE_URI)) {
+            uri = arguments.getParcelable(DETAIL_MOVIE_URI);
             movieId =  Integer.valueOf(MovieContract.MovieEntry.getMovieIdFromUri(uri));
             getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         }

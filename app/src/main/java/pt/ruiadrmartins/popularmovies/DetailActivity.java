@@ -8,11 +8,11 @@ import android.support.v7.app.ActionBarActivity;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
 
 /**
- * Used only on phone version
+ * DetailActivity Used only on phone version
  */
 public class DetailActivity extends ActionBarActivity implements DetailActivityFragment.Callback {
 
-    static final String MOVIE_ID_KEY = "movieId";
+    static final String DETAIL_MOVIE_ID_KEY = "movieId";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,14 +22,14 @@ public class DetailActivity extends ActionBarActivity implements DetailActivityF
 
         if(savedInstanceState == null) {
 
-            // On phone, Detail Activity controls DetailFragment
+            // On phone, Detail Activity controls DetailActivityFragment
             Bundle arguments = new Bundle();
             // If have to fetch data by id
-            if(getIntent().hasExtra(MOVIE_ID_KEY)) {
-                arguments.putParcelable(DetailActivityFragment.DETAIL_MOVIE_ID, getIntent().getParcelableExtra(MOVIE_ID_KEY));
+            if(getIntent().hasExtra(DETAIL_MOVIE_ID_KEY)) {
+                arguments.putParcelable(DetailActivityFragment.DETAIL_MOVIE_ID, getIntent().getParcelableExtra(DETAIL_MOVIE_ID_KEY));
             } else {
                 // If local storage by URI
-                arguments.putParcelable(DetailActivityFragment.DETAIL_URI, getIntent().getData());
+                arguments.putParcelable(DetailActivityFragment.DETAIL_MOVIE_URI, getIntent().getData());
             }
 
             // Start Detail Fragment
@@ -58,7 +58,7 @@ public class DetailActivity extends ActionBarActivity implements DetailActivityF
         if(Utilities.isStored(this, MovieContract.TrailerEntry.TABLE_NAME, movieId)) {
             intent.setData(MovieContract.TrailerEntry.buildTrailerUri(movieId));
         } else {
-            intent.putExtra(TrailersActivity.MOVIE_ID_KEY, movieId);
+            intent.putExtra(TrailersActivity.TRAILERS_MOVIE_ID_KEY, movieId);
         }
         startActivity(intent);
     }
@@ -76,18 +76,33 @@ public class DetailActivity extends ActionBarActivity implements DetailActivityF
         if(Utilities.isStored(this, MovieContract.TrailerEntry.TABLE_NAME, movieId)) {
             intent.setData(uri);
         } else {
-            intent.putExtra(TrailersActivity.MOVIE_ID_KEY, movieId);
+            intent.putExtra(TrailersActivity.TRAILERS_MOVIE_ID_KEY, movieId);
         }
         startActivity(intent);
     }
 
     @Override
     public void onReviewsSelected(int movieId) {
-
+        // Launch Review ACTIVITY
+        Intent intent = new Intent(this, ReviewsActivity.class);
+        if(Utilities.isStored(this, MovieContract.ReviewEntry.TABLE_NAME, movieId)) {
+            intent.setData(MovieContract.ReviewEntry.buildReviewUri(movieId));
+        } else {
+            intent.putExtra(ReviewsActivity.REVIEWS_MOVIE_ID_KEY, movieId);
+        }
+        startActivity(intent);
     }
 
     @Override
     public void onReviewsSelected(Uri uri) {
-
+        int movieId = Integer.valueOf(MovieContract.MovieEntry.getMovieIdFromUri(uri));
+        // Launch Review ACTIVITY
+        Intent intent = new Intent(this, ReviewsActivity.class);
+        if(Utilities.isStored(this, MovieContract.ReviewEntry.TABLE_NAME, movieId)) {
+            intent.setData(uri);
+        } else {
+            intent.putExtra(ReviewsActivity.REVIEWS_MOVIE_ID_KEY, movieId);
+        }
+        startActivity(intent);
     }
 }

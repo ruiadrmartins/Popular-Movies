@@ -2,6 +2,7 @@ package pt.ruiadrmartins.popularmovies;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -26,9 +27,9 @@ import pt.ruiadrmartins.popularmovies.helper.ReviewsFetchHelper;
  */
 public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
-    final String REVIEW_PARCELABLE_KEY = "reviewData";
-
-    private static final int REVIEW_LOADER = 0;
+    final static String REVIEWS_MOVIE_ID = "reviewsMovieId";
+    final static String REVIEWS_MOVIE_URI = "reviewsMovieURI";
+    final static String REVIEW_PARCELABLE_KEY = "reviewData";
 
     private ListView reviewListView;
     private ReviewAdapter adapter;
@@ -36,7 +37,10 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
     private TextView noReviewsFound;
     private ArrayList<Review> reviewList;
 
-    private int movieId = 0;
+    private static final int REVIEW_LOADER = 0;
+
+    private int movieId;
+    private Uri uri;
 
     public ReviewsActivityFragment() {
     }
@@ -49,22 +53,29 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
         noReviewsFound = (TextView) rootView.findViewById(R.id.no_reviews_found);
         reviewListView = (ListView) rootView.findViewById(R.id.review_list);
 
-        Intent intent = getActivity().getIntent();
-        if(intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
-            adapter = new ReviewAdapter(getActivity(), new ArrayList<Review>());
-            reviewListView.setAdapter(adapter);
+        // Fetch arguments from bundle arguments
+        Bundle arguments = getArguments();
 
-            if (savedInstanceState == null || !savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
-                intent = getActivity().getIntent();
-                movieId = intent.getIntExtra(DetailActivityFragment.DETAIL_MOVIE_ID, 0);
-                fetchReviews(movieId);
+        // If arguments exist
+        if(arguments!=null) {
+            // If fetch data from API
+            if (arguments.containsKey(REVIEWS_MOVIE_ID)) {
+                adapter = new ReviewAdapter(getActivity(), new ArrayList<Review>());
+                reviewListView.setAdapter(adapter);
+
+                // If data was saved
+                if (savedInstanceState != null && savedInstanceState.containsKey(REVIEW_PARCELABLE_KEY)) {
+                    reviewList = savedInstanceState.getParcelableArrayList(REVIEW_PARCELABLE_KEY);
+                    updateReviewList(reviewList);
+                } else {
+                    movieId = arguments.getInt(REVIEWS_MOVIE_ID);
+                    fetchReviews(movieId);
+                }
             } else {
-                reviewList = savedInstanceState.getParcelableArrayList(REVIEW_PARCELABLE_KEY);
-                updateReviewList(reviewList);
+                uri = arguments.getParcelable(REVIEWS_MOVIE_URI);
+                cursorAdapter = new ReviewCursorAdapter(getActivity(), null, 0, REVIEW_LOADER);
+                reviewListView.setAdapter(cursorAdapter);
             }
-        } else {
-            cursorAdapter = new ReviewCursorAdapter(getActivity(),null,0,REVIEW_LOADER);
-            reviewListView.setAdapter(cursorAdapter);
         }
 
         return rootView;
@@ -97,33 +108,34 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Intent intent = getActivity().getIntent();
-        if(!intent.hasExtra(DetailActivityFragment.DETAIL_MOVIE_ID)) {
-            movieId = Integer.valueOf(MovieContract.ReviewEntry.getMovieIdFromUri(intent.getData()));
-            if (Utilities.isStored(getActivity(), MovieContract.ReviewEntry.TABLE_NAME, movieId)) {
-                getLoaderManager().initLoader(REVIEW_LOADER, null, this);
-            }
+        Bundle arguments = getArguments();
+        // If data is local
+        if (arguments != null && arguments.containsKey(REVIEWS_MOVIE_URI)) {
+            uri = arguments.getParcelable(REVIEWS_MOVIE_URI);
+            movieId = Integer.valueOf(MovieContract.ReviewEntry.getMovieIdFromUri(uri));
+            getLoaderManager().initLoader(REVIEW_LOADER, null, this);
         }
+
         super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
-        }
+        if (null != uri) {
 
-        // Now create and return a CursorLoader that will take care of
-        // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                null,
-                null,
-                null,
-                null
-        );
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    //intent.getData(),
+                    uri,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+        return null;
     }
 
     @Override
