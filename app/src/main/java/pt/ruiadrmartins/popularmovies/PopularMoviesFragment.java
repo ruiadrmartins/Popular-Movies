@@ -33,6 +33,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     private ArrayList<Movie> movieList;
     private GridView gridView;
     private TextView noMoviesFound;
+    private TextView sortTV;
 
     private int selectedItem = 0;
 
@@ -64,6 +65,8 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
 
         noMoviesFound = (TextView) rootView.findViewById(R.id.no_movies_found);
         gridView = (GridView) rootView.findViewById(R.id.gridview);
+        sortTV = (TextView) rootView.findViewById(R.id.sort);
+        sortTV.setText(getString(R.string.format_sort, Utilities.getSortingName(sortBy, getActivity())));
 
         // Get saved data if it was stored in savedInstanceState
         // or initialize movie list array
@@ -118,6 +121,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
             updateMovieList();
             updateViews();
         }
+        sortTV.setText(getString(R.string.format_sort, Utilities.getSortingName(sortBy, getActivity())));
     }
 
     @Override
@@ -141,9 +145,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                     if (cursor != null) {
                         int movieIdIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
                         int movieId = cursor.getInt(movieIdIndex);
-                        /*Intent intent = new Intent(getActivity(), DetailActivity.class)
-                                .setData(MovieContract.MovieEntry.buildMovieUri(movieId));
-                        startActivity(intent);*/
+
                         ((Callback) getActivity())
                                 .onItemSelected(MovieContract.MovieEntry.buildMovieUri(movieId));
                         selectedItem = position;
@@ -159,9 +161,6 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Movie movieData = adapter.getItem(position);
 
-                    /*Intent intent = new Intent(getActivity(), DetailActivity.class);
-                    intent.putExtra(MOVIE_DATA_KEY, movieData);
-                    startActivity(intent);*/
                     ((Callback) getActivity()).onItemSelected(movieData);
                     selectedItem = position;
                 }
@@ -170,6 +169,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     }
 
     void updateMovieList() {
+        sortBy = Utilities.currentPreference(getActivity());
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             // Get movies from database
             getLoaderManager().restartLoader(CURSOR_LOADER_ID,null,this);
@@ -206,6 +206,7 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         cursorAdapter.swapCursor(cursor);
         gridView.smoothScrollToPosition(selectedItem);
+
         if(cursor.moveToFirst()){
             noMoviesFound.setText("");
         } else {
@@ -239,6 +240,8 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
             if(movies!=null) {
                 movieList = movies;
                 noMoviesFound.setText("");
+            } else {
+                noMoviesFound.setText(getString(R.string.no_movies_found));
             }
             for (Movie movie: movies) {
                 adapter.add(movie);

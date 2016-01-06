@@ -18,10 +18,10 @@
 
     <string name="pref_sort_popularity_label">Popularity</string>
     <string name="pref_sort_rating_label">Rating</string>
+    <string name="pref_sort_favorites_label">Favorites</string>
+
     <string name="pref_sort_popularity">popularity.desc</string>
     <string name="pref_sort_rating">vote_average.desc</string>
-
-    <string name="pref_sort_favorites_label">Favorites</string>
     <string name="pref_sort_favorites">favorites</string>
 
     <!-- Detail Labels -->
@@ -35,8 +35,10 @@
     <string name="no_reviews_found">No reviews found</string>
     <string name="no_trailers_found">No trailers found</string>
     <string name="no_movies_found">No movies found</string>
+    <string name="no_movie_selected">No movie selected</string>
 
     <!-- String Formatting -->
     <string name="format_rating"><xliff:g id="rating">%1$.1f</xliff:g>/10.0</string>
+    <string name="format_sort">Sorting by: %1$s</string>
 
 </resources>

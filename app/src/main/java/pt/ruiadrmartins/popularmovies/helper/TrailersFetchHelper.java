@@ -82,8 +82,6 @@ public class TrailersFetchHelper {
 
             dataJson = buffer.toString();
 
-            Log.v("TR", dataJson);
-
             return getTrailerDataFromJson(movieId, dataJson);
 
         }  catch (IOException e) {

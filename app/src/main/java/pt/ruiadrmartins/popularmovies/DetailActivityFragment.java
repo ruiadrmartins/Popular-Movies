@@ -1,7 +1,6 @@
 package pt.ruiadrmartins.popularmovies;
 
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
@@ -16,6 +15,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +49,8 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     private Button reviewButton;
     private Button trailerButton;
     private CheckBox favoritedMovie;
+    private LinearLayout detailLayout;
+    private TextView noMovieSelected;
 
     private static final int DETAIL_LOADER = 0;
 
@@ -76,11 +78,15 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         reviewButton = (Button) rootView.findViewById(R.id.review_button);
         trailerButton = (Button) rootView.findViewById(R.id.trailer_button);
         favoritedMovie = (CheckBox) rootView.findViewById(R.id.checkFavorite);
+        detailLayout = (LinearLayout) rootView.findViewById(R.id.detailLayout);
+        noMovieSelected = (TextView) rootView.findViewById(R.id.no_movie_selected);
 
         // Fetch bundled arguments
         Bundle arguments = getArguments();
         // If arguments exist
         if(arguments!=null) {
+            detailLayout.setVisibility(View.VISIBLE);
+            noMovieSelected.setText("");
             // If fetch local data
             if (arguments.containsKey(DetailActivityFragment.DETAIL_MOVIE_URI)) {
                 uri = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_URI);
@@ -96,6 +102,9 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
                 }
                 updateViews(movieData.movieName, movieData.releaseDate, movieData.rating, movieData.synopsis, movieData.coverLink, rootView);
             }
+        } else {
+            detailLayout.setVisibility(View.GONE);
+            noMovieSelected.setText(getString(R.string.no_movie_selected));
         }
 
         return rootView;
@@ -138,13 +147,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     }
 
     private void startReviewsIntent(int movieId) {
-        /*Intent intent = new Intent(getActivity(), ReviewsActivity.class);
-        if (Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
-            intent.setData(MovieContract.ReviewEntry.buildReviewUri(movieId));
-        } else {
-            intent.putExtra(DETAIL_MOVIE_ID, movieId);
-        }
-        startActivity(intent);*/
+        // If local data
         if(Utilities.isStored(getActivity(),MovieContract.MovieEntry.TABLE_NAME,movieId)) {
             ((Callback) getActivity()).onReviewsSelected(MovieContract.ReviewEntry.buildReviewUri(movieId));
         } else {

@@ -36,6 +36,7 @@ public class MainActivity extends ActionBarActivity implements PopularMoviesFrag
                         .replace(R.id.fragment_detail, new DetailActivityFragment(), DETAIL_FRAGMENT_TAG)
                         .commit();
             }
+
         } else {
             // Phone
             mTwoPane = false;
@@ -133,11 +134,6 @@ public class MainActivity extends ActionBarActivity implements PopularMoviesFrag
                 pmf.updateMovieList();
                 pmf.updateViews();
             }
-            /*
-            DetailActivityFragment daf = (DetailActivityFragment) getSupportFragmentManager().findFragmentByTag(DETAIL_FRAGMENT_TAG);
-            if(daf!=null) {
-
-            }*/
         }
     }
 

@@ -22,6 +22,20 @@ public class Utilities {
         return sort.equals(context.getString(R.string.pref_sort_favorites));
     }
 
+    public static String getSortingName(String sorting, Context context){
+        String popularity = context.getString(R.string.pref_sort_popularity);
+        String rating = context.getString(R.string.pref_sort_rating);
+        String favorites = context.getString(R.string.pref_sort_favorites);
+
+        if(sorting.equals(popularity))
+            return context.getString(R.string.pref_sort_popularity_label);
+        else if(sorting.equals(rating))
+            return context.getString(R.string.pref_sort_rating_label);
+        else if(sorting.equals(favorites))
+            return context.getString(R.string.pref_sort_favorites_label);
+        return "";
+    }
+
     // DB Queries
     private static Cursor queryStoredMovie(Context context, String movieId) {
         return context.getContentResolver().query(
