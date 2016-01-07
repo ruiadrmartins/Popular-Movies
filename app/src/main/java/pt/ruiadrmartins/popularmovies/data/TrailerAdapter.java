@@ -10,13 +10,12 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import pt.ruiadrmartins.popularmovies.R;
 
 /**
- * Created by ruimartins on 02-12-2015.
+ * ArrayAdapter to insert Trailer info into View
  */
 public class TrailerAdapter extends ArrayAdapter<Trailer> {
     private static final String LOG_TAG = TrailerAdapter.class.getSimpleName();

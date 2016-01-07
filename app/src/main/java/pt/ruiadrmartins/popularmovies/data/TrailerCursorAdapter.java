@@ -14,10 +14,11 @@ import com.squareup.picasso.Picasso;
 import pt.ruiadrmartins.popularmovies.R;
 
 /**
- * Created by ruimartins on 28-12-2015.
+ * Cursor Adapter to load locally stored Trailer info
  */
 public class TrailerCursorAdapter extends CursorAdapter {
 
+    // Youtube thumbnail link
     private final String TRAILER_THUMB_PREFIX = "http://img.youtube.com/vi/";
     private final String TRAILER_THUMB_SUFFIX = "/0.jpg";
 
@@ -28,7 +29,6 @@ public class TrailerCursorAdapter extends CursorAdapter {
 
         ImageView cover;
         TextView trailerName;
-
 
         public ViewHolder(View view){
             cover = (ImageView) view.findViewById(R.id.trailer_item_cover);

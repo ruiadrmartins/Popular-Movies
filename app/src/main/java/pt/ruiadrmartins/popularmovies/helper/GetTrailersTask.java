@@ -11,7 +11,7 @@ import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Trailer;
 
 /**
- * Created by ruimartins on 28-12-2015.
+ * Task to get reviews outside of TrailersActivityFragment
  */
 public class GetTrailersTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> {
 

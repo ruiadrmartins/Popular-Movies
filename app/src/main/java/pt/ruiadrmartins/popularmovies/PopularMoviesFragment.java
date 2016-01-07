@@ -134,6 +134,9 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Change UI elements, when necessary
+     */
     void updateViews() {
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {
             cursorAdapter = new MoviesCursorAdapter(getActivity(), null, 0, CURSOR_LOADER_ID);
@@ -168,6 +171,9 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
         }
     }
 
+    /**
+     * Update list of movies, when list changed
+     */
     void updateMovieList() {
         sortBy = Utilities.currentPreference(getActivity());
         if(Utilities.sortIsFavorite(sortBy, getActivity())) {

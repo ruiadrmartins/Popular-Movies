@@ -11,7 +11,7 @@ import android.widget.TextView;
 import pt.ruiadrmartins.popularmovies.R;
 
 /**
- * Created by ruimartins on 28-12-2015.
+ * Cursor Adapter to load locally stored Review info
  */
 public class ReviewCursorAdapter extends CursorAdapter {
 

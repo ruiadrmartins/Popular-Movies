@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Review;
 
-// Task to get reviews outside of ReviewsActivityFragment
+/**
+ * Task to get reviews outside of ReviewsActivityFragment
+ */
 public class GetReviewsTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
 
     private final String LOG_TAG = GetReviewsTask.class.getSimpleName();

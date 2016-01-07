@@ -19,7 +19,7 @@ import pt.ruiadrmartins.popularmovies.BuildConfig;
 import pt.ruiadrmartins.popularmovies.data.Movie;
 
 /**
- * Created by ruimartins on 28-12-2015.
+ * Code for fetching Movies from API in background
  */
 public class MoviesFetchHelper {
 
@@ -29,7 +29,7 @@ public class MoviesFetchHelper {
         LOG_TAG = tag;
     }
 
-    /*
+    /**
      * Adapted from Udacity Sunshine App example
      * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
      * Changed
@@ -102,7 +102,6 @@ public class MoviesFetchHelper {
                 }
             }
         }
-
     }
 
     private ArrayList<Movie> getMovieDataFromJson(String movieJson) throws JSONException {

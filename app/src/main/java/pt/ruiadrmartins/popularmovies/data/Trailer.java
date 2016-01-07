@@ -4,10 +4,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by ruimartins on 01-12-2015.
+ * Movie structure to store Trailer info
+ * Parcelable
  */
 public class Trailer implements Parcelable {
 
+    // Youtube thumbnail link
     private final String TRAILER_THUMB_PREFIX = "http://img.youtube.com/vi/";
     private final String TRAILER_THUMB_SUFFIX = "/0.jpg";
 

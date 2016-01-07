@@ -19,10 +19,9 @@ import pt.ruiadrmartins.popularmovies.BuildConfig;
 import pt.ruiadrmartins.popularmovies.data.Trailer;
 
 /**
- * Created by ruimartins on 28-12-2015.
+ * Code for fetching Trailers from API in background
  */
 public class TrailersFetchHelper {
-
 
     final String MOVIES_BASE_URL = "http://api.themoviedb.org/3/movie/";
     final String TRAILER_SUFFIX = "/videos?";

@@ -90,14 +90,6 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
-    private void normalizeDate(ContentValues values) {
-        // normalize the date value
-        if (values.containsKey(MovieContract.MovieEntry.COLUMN_RELEASE_DATE)) {
-            long dateValue = values.getAsLong(MovieContract.MovieEntry.COLUMN_RELEASE_DATE);
-            values.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, MovieContract.normalizeDate(dateValue));
-        }
-    }
-
     @Override
     public boolean onCreate() {
         movieDbHelper = new MovieDbHelper(getContext());
@@ -289,7 +281,6 @@ public class MovieProvider extends ContentProvider {
                 int returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        normalizeDate(value);
                         long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
                             if (_id != -1) {
                             returnCount++;

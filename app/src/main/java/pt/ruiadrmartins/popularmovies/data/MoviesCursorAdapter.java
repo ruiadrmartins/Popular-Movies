@@ -13,7 +13,7 @@ import com.squareup.picasso.Picasso;
 import pt.ruiadrmartins.popularmovies.R;
 
 /**
- * Created by ruimartins on 18-12-2015.
+ * Cursor Adapter to load locally stored Movie info
  */
 public class MoviesCursorAdapter extends CursorAdapter {
 

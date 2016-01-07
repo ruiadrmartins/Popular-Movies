@@ -12,7 +12,7 @@ import java.util.List;
 import pt.ruiadrmartins.popularmovies.R;
 
 /**
- * Created by ruimartins on 02-12-2015.
+ * ArrayAdapter to insert Review info into View
  */
 public class ReviewAdapter extends ArrayAdapter<Review>{
 

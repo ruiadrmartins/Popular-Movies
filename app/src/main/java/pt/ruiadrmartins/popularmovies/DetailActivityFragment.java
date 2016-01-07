@@ -8,6 +8,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -110,6 +111,15 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         return rootView;
     }
 
+    /**
+     * Change UI elements, when necessary
+     * @param name
+     * @param releaseDate
+     * @param rating
+     * @param synopsis
+     * @param coverLink
+     * @param view
+     */
     private void updateViews(final String name, final String releaseDate, final double rating, final String synopsis, final String coverLink, final View view) {
 
         detailTitle.setText(name);
@@ -146,6 +156,10 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         });
     }
 
+    /**
+     * Go to Review activity
+     * @param movieId
+     */
     private void startReviewsIntent(int movieId) {
         // If local data
         if(Utilities.isStored(getActivity(),MovieContract.MovieEntry.TABLE_NAME,movieId)) {
@@ -156,6 +170,10 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         }
     }
 
+    /**
+     * Go to Trailer activity
+     * @param movieId
+     */
     private void startTrailersIntent(int movieId) {
         // If local data
         if(Utilities.isStored(getActivity(),MovieContract.MovieEntry.TABLE_NAME,movieId)) {
@@ -166,6 +184,14 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         }
     }
 
+    /**
+     * Adds Movie and associated reviews/trailers to database
+     * @param name
+     * @param cover
+     * @param synopsis
+     * @param rating
+     * @param releaseDate
+     */
     private void addMovie(String name, String cover, String synopsis, double rating, String releaseDate){
         if(!Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             ContentValues movieValues = new ContentValues();
@@ -192,6 +218,9 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         }
     }
 
+    /**
+     * Removes Movie and associated reviews/trailers from database
+     */
     private void removeMovie() {
         if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
             int affectedRows = getActivity().getContentResolver().delete(
@@ -202,43 +231,26 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
             if (affectedRows == 1) {
                 Toast.makeText(getActivity(), "Movie deleted from favorites!", Toast.LENGTH_SHORT).show();
-            } else if (affectedRows == 0){
-                Toast.makeText(getActivity(), "No movies deleted...", Toast.LENGTH_SHORT).show();
+
+                // Remove reviews and trailers as well
+                getActivity().getContentResolver().delete(
+                        MovieContract.ReviewEntry.CONTENT_URI,
+                        MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{String.valueOf(movieId)}
+                );
+
+                getActivity().getContentResolver().delete(
+                        MovieContract.TrailerEntry.CONTENT_URI,
+                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{String.valueOf(movieId)}
+                );
+
             } else {
-                Toast.makeText(getActivity(), "Something went wrong...", Toast.LENGTH_SHORT).show();
-            }
-
-            // Remove reviews and trailers as well
-            affectedRows = getActivity().getContentResolver().delete(
-                    MovieContract.ReviewEntry.CONTENT_URI,
-                    MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
-                    new String[]{String.valueOf(movieId)}
-            );
-
-            if (affectedRows >= 1) {
-                Toast.makeText(getActivity(), "Reviews deleted from favorites!", Toast.LENGTH_SHORT).show();
-            } else if (affectedRows == 0){
-                Toast.makeText(getActivity(), "No reviews deleted...", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Something went wrong... Reviews", Toast.LENGTH_SHORT).show();
-            }
-
-            affectedRows = getActivity().getContentResolver().delete(
-                    MovieContract.TrailerEntry.CONTENT_URI,
-                    MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
-                    new String[]{String.valueOf(movieId)}
-            );
-
-            if (affectedRows >= 1) {
-                Toast.makeText(getActivity(), "Trailers deleted from favorites!", Toast.LENGTH_SHORT).show();
-            } else if (affectedRows == 0){
-                Toast.makeText(getActivity(), "No trailers deleted...", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Something went wrong... Trailers", Toast.LENGTH_SHORT).show();
+                Log.e(LOG_TAG,"Movie id " + String.valueOf(movieId) + " not deleted");
             }
 
         } else {
-            Toast.makeText(getActivity(), "Movie is not favorite!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Movie is not favorite", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -266,12 +278,8 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if(null != uri) {
-
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
             return new CursorLoader(
                     getActivity(),
-                    //intent.getData(),
                     uri,
                     null,
                     null,

@@ -19,7 +19,7 @@ import pt.ruiadrmartins.popularmovies.BuildConfig;
 import pt.ruiadrmartins.popularmovies.data.Review;
 
 /**
- * Created by ruimartins on 23-12-2015.
+ * Code for fetching Reviews from API in background
  */
 public class ReviewsFetchHelper {
 
@@ -33,7 +33,7 @@ public class ReviewsFetchHelper {
         LOG_TAG = tag;
     }
 
-    /*
+    /**
      * Adapted from Udacity Sunshine App example
      * <a href="https://github.com/udacity/Sunshine-Version-2">Sunshine</a>
      * Changed

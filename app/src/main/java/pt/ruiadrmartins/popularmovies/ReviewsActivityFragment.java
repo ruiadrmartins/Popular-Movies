@@ -1,6 +1,5 @@
 package pt.ruiadrmartins.popularmovies;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -23,7 +22,7 @@ import pt.ruiadrmartins.popularmovies.data.ReviewCursorAdapter;
 import pt.ruiadrmartins.popularmovies.helper.ReviewsFetchHelper;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Fragment for ReviewsActivity
  */
 public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
@@ -81,11 +80,19 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
         return rootView;
     }
 
+    /**
+     * Fetch reviews from API
+     * @param movieId
+     */
     private void fetchReviews(int movieId) {
         FetchReviewTask frt = new FetchReviewTask();
         frt.execute(movieId);
     }
 
+    /**
+     * Update data on Review list
+     * @param list
+     */
     private void updateReviewList(ArrayList<Review> list) {
         if(list!= null && list.size()>0) {
             adapter = new ReviewAdapter(getActivity(),list);
@@ -122,12 +129,8 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (null != uri) {
-
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
             return new CursorLoader(
                     getActivity(),
-                    //intent.getData(),
                     uri,
                     null,
                     null,
@@ -173,7 +176,6 @@ public class ReviewsActivityFragment extends Fragment implements LoaderCallbacks
                     adapter.add(review);
                 }
             }
-            //updateReviewList(list);
         }
     }
 }

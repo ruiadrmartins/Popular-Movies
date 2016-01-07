@@ -4,7 +4,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by ruimartins on 01-12-2015.
+ * Movie structure to store Review info
+ * Parcelable
  */
 public class Review implements Parcelable {
 

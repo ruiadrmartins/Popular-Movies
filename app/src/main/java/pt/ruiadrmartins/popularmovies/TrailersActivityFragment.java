@@ -25,7 +25,7 @@ import pt.ruiadrmartins.popularmovies.data.TrailerCursorAdapter;
 import pt.ruiadrmartins.popularmovies.helper.TrailersFetchHelper;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Fragment for TrailersActivity
  */
 public class TrailersActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -108,6 +108,10 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
         return rootView;
     }
 
+    /**
+     * Launches video in Browser or Youtube app
+     * @param trailer
+     */
     public void startVideoIntent(Trailer trailer) {
 
         final String YOUTUBE_VIDEO_LINK_PREFIX = "https://www.youtube.com/watch?v=";
@@ -121,11 +125,19 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
         }
     }
 
+    /**
+     * Fetch trailers from API
+     * @param movieId
+     */
     private void fetchTrailers(int movieId) {
         FetchTrailerTask ftt = new FetchTrailerTask();
         ftt.execute(movieId);
     }
 
+    /**
+     * Update data on Trailer list
+     * @param list
+     */
     private void updateTrailerList(ArrayList<Trailer> list) {
         if(list != null && list.size()>0) {
             adapter = new TrailerAdapter(getActivity(),list);
@@ -162,12 +174,8 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (null != uri) {
-
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
             return new CursorLoader(
                     getActivity(),
-                    //intent.getData(),
                     uri,
                     null,
                     null,
@@ -213,7 +221,6 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
                     adapter.add(trailer);
                 }
             }
-            //updateTrailerList(list);
         }
     }
 }
