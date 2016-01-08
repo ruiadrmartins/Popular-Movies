@@ -134,7 +134,7 @@ public class MoviesFetchHelper {
             double rating = movieData.getDouble(RATING_ELEMENT);
             String releaseDate = movieData.getString(RELEASE_DATE_ELEMENT);
 
-            Movie movie = new Movie(movieId, title,poster,synopsis,rating,releaseDate);
+            Movie movie = new Movie(movieId, title,poster,synopsis,rating,releaseDate, null);
 
             result.add(movie);
         }

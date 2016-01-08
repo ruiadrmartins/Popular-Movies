@@ -37,7 +37,11 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
         // Insert cover into imageview, using Picasso
         // http://square.github.io/picasso/
         ImageView cover = (ImageView) convertView.findViewById(R.id.grid_item_movie_image);
-        Picasso.with(convertView.getContext()).load(movie.coverLink).placeholder(R.mipmap.ic_launcher).into(cover);
+        Picasso.with(convertView.getContext())
+                .load(movie.coverLink)
+                .placeholder(R.mipmap.ic_launcher)
+                .error(R.mipmap.ic_launcher)
+                .into(cover);
         cover.setContentDescription(movie.movieName);
 
         return convertView;

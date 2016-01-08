@@ -1,5 +1,7 @@
 package pt.ruiadrmartins.popularmovies.data;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v4.widget.CursorAdapter;
 import android.content.Context;
 import android.database.Cursor;
@@ -52,16 +54,31 @@ public class MoviesCursorAdapter extends CursorAdapter {
 
         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-        int coverIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_COVER_LINK);
-        final String coverLink = cursor.getString(coverIndex);
-
         int nameIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_NAME);
         final String movieName = cursor.getString(nameIndex);
 
-        // Insert cover into imageview, using Picasso
-        // http://square.github.io/picasso/
-        Picasso.with(view.getContext()).load(coverLink).placeholder(R.mipmap.ic_launcher).into(viewHolder.cover);
-        viewHolder.cover.setContentDescription(movieName);
+        int coverBlobIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_COVER_BLOB);
+        if(coverBlobIndex!=-1) {
+            byte[] cover = cursor.getBlob(coverBlobIndex);
+
+            Bitmap bm = BitmapFactory.decodeByteArray(cover, 0, cover.length);
+
+            viewHolder.cover.setImageBitmap(bm);
+            viewHolder.cover.setContentDescription(movieName);
+        } else {
+            int coverIndex = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_COVER_LINK);
+            final String coverLink = cursor.getString(coverIndex);
+
+            // Insert cover into imageview, using Picasso
+            // http://square.github.io/picasso/
+            Picasso.with(view.getContext())
+            .load(coverLink)
+            .placeholder(R.mipmap.ic_launcher)
+            .error(R.mipmap.ic_launcher)
+            .into(viewHolder.cover);
+
+            viewHolder.cover.setContentDescription(movieName);
+        }
 
     }
 }

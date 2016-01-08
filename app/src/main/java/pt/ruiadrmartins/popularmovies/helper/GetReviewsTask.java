@@ -3,7 +3,6 @@ package pt.ruiadrmartins.popularmovies.helper;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -13,7 +12,7 @@ import pt.ruiadrmartins.popularmovies.data.Review;
 /**
  * Task to get reviews outside of ReviewsActivityFragment
  */
-public class GetReviewsTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
+public class GetReviewsTask extends AsyncTask<Integer,Void,Void> {
 
     private final String LOG_TAG = GetReviewsTask.class.getSimpleName();
 
@@ -26,12 +25,11 @@ public class GetReviewsTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
     }
 
     @Override
-    protected ArrayList<Review> doInBackground(Integer... params) {
-        return fetchHelper.doInBackground(params);
-    }
+    protected Void doInBackground(Integer... params) {
+        // Fetch online
+        ArrayList<Review> reviews =  fetchHelper.doInBackground(params);
 
-    @Override
-    protected void onPostExecute(ArrayList<Review> reviews) {
+        // Store info
         ContentValues[] values = new ContentValues[reviews.size()];
 
         for(int i=0;i<reviews.size();i++) {
@@ -43,12 +41,10 @@ public class GetReviewsTask extends AsyncTask<Integer,Void,ArrayList<Review>> {
             values[i] = reviewValues;
         }
 
-        int insertCount = mContext.getContentResolver().bulkInsert(
+        mContext.getContentResolver().bulkInsert(
                 MovieContract.ReviewEntry.CONTENT_URI,
                 values);
 
-        if(insertCount!=0 && insertCount==reviews.size())
-            Toast.makeText(mContext, "Reviews added!", Toast.LENGTH_SHORT).show();
-
+        return null;
     }
 }

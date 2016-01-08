@@ -246,11 +246,11 @@ public class PopularMoviesFragment extends Fragment implements LoaderManager.Loa
             if(movies!=null) {
                 movieList = movies;
                 noMoviesFound.setText("");
+                for (Movie movie: movies) {
+                    adapter.add(movie);
+                }
             } else {
                 noMoviesFound.setText(getString(R.string.no_movies_found));
-            }
-            for (Movie movie: movies) {
-                adapter.add(movie);
             }
         }
     }

@@ -13,7 +13,7 @@ import pt.ruiadrmartins.popularmovies.data.MovieContract.ReviewEntry;
  */
 public class MovieDbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 4;
     public static final String DATABASE_NAME = "movies.db";
 
     public MovieDbHelper(Context context) {
@@ -29,7 +29,8 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                 MovieEntry.COLUMN_COVER_LINK + " TEXT NOT NULL, " +
                 MovieEntry.COLUMN_SYNOPSIS + " TEXT NOT NULL, " +
                 MovieEntry.COLUMN_RATING + " REAL NOT NULL, " +
-                MovieEntry.COLUMN_RELEASE_DATE + " INTEGER NOT NULL " + // Julian Days
+                MovieEntry.COLUMN_RELEASE_DATE + " INTEGER NOT NULL, " + // Julian Days
+                MovieEntry.COLUMN_COVER_BLOB + " BLOB " +
                 " );";
 
         final String SQL_CREATE_TRAILER_TABLE = "CREATE TABLE " + TrailerEntry.TABLE_NAME + " (" +

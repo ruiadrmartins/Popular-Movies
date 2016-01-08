@@ -3,7 +3,6 @@ package pt.ruiadrmartins.popularmovies.helper;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -11,9 +10,9 @@ import pt.ruiadrmartins.popularmovies.data.MovieContract;
 import pt.ruiadrmartins.popularmovies.data.Trailer;
 
 /**
- * Task to get reviews outside of TrailersActivityFragment
+ * Task to get trailers outside of TrailersActivityFragment
  */
-public class GetTrailersTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> {
+public class GetTrailersTask extends AsyncTask<Integer,Void,Void> {
 
     private final String LOG_TAG = GetReviewsTask.class.getSimpleName();
 
@@ -26,12 +25,11 @@ public class GetTrailersTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> 
     }
 
     @Override
-    protected ArrayList<Trailer> doInBackground(Integer... params) {
-        return fetchHelper.doInBackground(params);
-    }
+    protected Void doInBackground(Integer... params) {
+        // Fetch online
+        ArrayList<Trailer> trailers = fetchHelper.doInBackground(params);
 
-    @Override
-    protected void onPostExecute(ArrayList<Trailer> trailers) {
+        // Store info
         ContentValues[] values = new ContentValues[trailers.size()];
 
         for(int i=0;i<trailers.size();i++) {
@@ -43,11 +41,10 @@ public class GetTrailersTask extends AsyncTask<Integer,Void,ArrayList<Trailer>> 
             values[i] = trailerValues;
         }
 
-        int insertCount = mContext.getContentResolver().bulkInsert(
+        mContext.getContentResolver().bulkInsert(
                 MovieContract.TrailerEntry.CONTENT_URI,
                 values);
 
-        if(insertCount!=0 && insertCount==trailers.size())
-            Toast.makeText(mContext, "Trailers added!", Toast.LENGTH_SHORT).show();
+        return null;
     }
 }

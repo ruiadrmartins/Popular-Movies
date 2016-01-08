@@ -1,14 +1,14 @@
 package pt.ruiadrmartins.popularmovies;
 
-import android.content.ContentValues;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +24,10 @@ import com.squareup.picasso.Picasso;
 
 import pt.ruiadrmartins.popularmovies.data.Movie;
 import pt.ruiadrmartins.popularmovies.data.MovieContract;
+import pt.ruiadrmartins.popularmovies.helper.AddMovieTask;
 import pt.ruiadrmartins.popularmovies.helper.GetReviewsTask;
 import pt.ruiadrmartins.popularmovies.helper.GetTrailersTask;
+import pt.ruiadrmartins.popularmovies.helper.RemoveMovieTask;
 
 /**
  * Detail Activity Fragment
@@ -89,19 +91,21 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             detailLayout.setVisibility(View.VISIBLE);
             noMovieSelected.setText("");
             // If fetch local data
-            if (arguments.containsKey(DetailActivityFragment.DETAIL_MOVIE_URI)) {
-                uri = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_URI);
-            } else if (arguments.containsKey(DetailActivityFragment.DETAIL_MOVIE_ID)) {
+            if (arguments.containsKey(DETAIL_MOVIE_URI)) {
+                uri = arguments.getParcelable(DETAIL_MOVIE_URI);
+            } else if (arguments.containsKey(DETAIL_MOVIE_ID)) {
                 // If data is stored in savedState
                 if (savedInstanceState != null && savedInstanceState.containsKey(MOVIE_PARCELABLE_KEY)) {
                     movieData = savedInstanceState.getParcelable(MOVIE_PARCELABLE_KEY);
                     movieId = movieData.movieId;
                 } else {
                     // Fetch data from API
-                    movieData = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_ID);
+                    movieData = arguments.getParcelable(DETAIL_MOVIE_ID);
                     movieId = movieData.movieId;
                 }
-                updateViews(movieData.movieName, movieData.releaseDate, movieData.rating, movieData.synopsis, movieData.coverLink, rootView);
+                if(!Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME,movieId)) {
+                    updateViews(movieData.movieName, movieData.releaseDate, movieData.rating, movieData.synopsis, movieData.coverLink, movieData.coverBlob, rootView);
+                }
             }
         } else {
             detailLayout.setVisibility(View.GONE);
@@ -120,14 +124,21 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
      * @param coverLink
      * @param view
      */
-    private void updateViews(final String name, final String releaseDate, final double rating, final String synopsis, final String coverLink, final View view) {
+    private void updateViews(final String name, final String releaseDate, final double rating, final String synopsis, final String coverLink, final byte[] coverBlob, final View view) {
 
         detailTitle.setText(name);
         detailDate.setText(releaseDate);
         String ratingValue = getString(R.string.format_rating, rating);
         detailRating.setText(ratingValue);
         detailSynopsis.setText(synopsis);
-        Picasso.with(view.getContext()).load(coverLink).placeholder(R.mipmap.ic_launcher).into(cover);
+
+        if(coverBlob!=null && coverBlob.length>0) {
+            Bitmap bm = BitmapFactory.decodeByteArray(coverBlob, 0, coverBlob.length);
+            cover.setImageBitmap(bm);
+        } else {
+            Picasso.with(view.getContext()).load(coverLink).placeholder(R.mipmap.ic_launcher).into(cover);
+
+        }
 
         reviewButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -194,19 +205,20 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
      */
     private void addMovie(String name, String cover, String synopsis, double rating, String releaseDate){
         if(!Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
-            ContentValues movieValues = new ContentValues();
 
-            movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movieId);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_NAME, name);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_COVER_LINK, cover);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, synopsis);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_RATING, rating);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
-
-            getActivity().getContentResolver().insert(
-                    MovieContract.MovieEntry.CONTENT_URI,
-                    movieValues
+            Movie movie = new Movie(
+                    movieId,
+                    name,
+                    cover,
+                    synopsis,
+                    rating,
+                    releaseDate,
+                    null
             );
+
+            // Store movie
+            AddMovieTask addMovieTask = new AddMovieTask(getActivity());
+            addMovieTask.execute(movie);
 
             // Store reviews and trailers as well
             GetReviewsTask getReviewsTask = new GetReviewsTask(getActivity());
@@ -215,6 +227,9 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             getTrailersTask.execute(movieId);
 
             Toast.makeText(getActivity(), "Movie added to favorites!", Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(getActivity(), "Movie already favorite!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -223,31 +238,11 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
      */
     private void removeMovie() {
         if(Utilities.isStored(getActivity(), MovieContract.MovieEntry.TABLE_NAME, movieId)) {
-            int affectedRows = getActivity().getContentResolver().delete(
-                    MovieContract.MovieEntry.CONTENT_URI,
-                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                    new String[]{String.valueOf(movieId)}
-            );
 
-            if (affectedRows == 1) {
-                Toast.makeText(getActivity(), "Movie deleted from favorites!", Toast.LENGTH_SHORT).show();
+            RemoveMovieTask removeMovieTask = new RemoveMovieTask(getActivity());
+            removeMovieTask.execute(movieId);
 
-                // Remove reviews and trailers as well
-                getActivity().getContentResolver().delete(
-                        MovieContract.ReviewEntry.CONTENT_URI,
-                        MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
-                        new String[]{String.valueOf(movieId)}
-                );
-
-                getActivity().getContentResolver().delete(
-                        MovieContract.TrailerEntry.CONTENT_URI,
-                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
-                        new String[]{String.valueOf(movieId)}
-                );
-
-            } else {
-                Log.e(LOG_TAG,"Movie id " + String.valueOf(movieId) + " not deleted");
-            }
+            Toast.makeText(getActivity(), "Movie deleted from favorites!", Toast.LENGTH_SHORT).show();
 
         } else {
             Toast.makeText(getActivity(), "Movie is not favorite", Toast.LENGTH_SHORT).show();
@@ -267,10 +262,17 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         // Get bundle arguments
         Bundle arguments = getArguments();
         // If movie is stored locally
-        if(arguments!=null && arguments.containsKey(DETAIL_MOVIE_URI)) {
-            uri = arguments.getParcelable(DETAIL_MOVIE_URI);
-            movieId =  Integer.valueOf(MovieContract.MovieEntry.getMovieIdFromUri(uri));
-            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        if(arguments!=null) {
+            if (arguments.containsKey(DETAIL_MOVIE_URI)) {
+                uri = arguments.getParcelable(DETAIL_MOVIE_URI);
+                movieId = Integer.valueOf(MovieContract.MovieEntry.getMovieIdFromUri(uri));
+                getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            } else if(arguments.containsKey(DETAIL_MOVIE_ID)){
+                Movie movieData = arguments.getParcelable(DetailActivityFragment.DETAIL_MOVIE_ID);
+                movieId = movieData.movieId;
+                uri = MovieContract.MovieEntry.buildMovieUri(movieId);
+                getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            }
         }
         super.onActivityCreated(savedInstanceState);
     }
@@ -312,9 +314,13 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         int idIndex = data.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
         movieId = data.getInt(idIndex);
 
-        updateViews(name,releaseDate,rating,synopsis,coverLink,getView());
+        int coverBlobIndex = data.getColumnIndexOrThrow(MovieContract.MovieEntry.COLUMN_COVER_BLOB);
+        byte[] coverBlob = data.getBlob(coverBlobIndex);
+
+        updateViews(name, releaseDate, rating, synopsis, coverLink, coverBlob, getView());
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) { }
+
 }

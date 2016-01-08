@@ -15,14 +15,16 @@ public class Movie implements Parcelable {
     public String synopsis;
     public double rating;
     public String releaseDate;
+    public byte[] coverBlob;
 
-    public Movie(int movieId, String movieName, String coverLink, String synopsis, double rating, String releaseDate) {
+    public Movie(int movieId, String movieName, String coverLink, String synopsis, double rating, String releaseDate, byte[] coverBlob) {
         this.movieId = movieId;
         this.movieName = movieName;
         this.coverLink = coverLink;
         this.synopsis = synopsis;
         this.rating = rating;
         this.releaseDate = releaseDate;
+        this.coverBlob = coverBlob;
     }
 
     /*
@@ -36,6 +38,8 @@ public class Movie implements Parcelable {
         synopsis = parcel.readString();
         rating = parcel.readDouble();
         releaseDate = parcel.readString();
+        coverBlob = new byte[parcel.readInt()];
+        parcel.readByteArray(coverBlob);
     }
 
     @Override
@@ -51,6 +55,10 @@ public class Movie implements Parcelable {
         dest.writeString(synopsis);
         dest.writeDouble(rating);
         dest.writeString(releaseDate);
+        if(coverBlob!=null) {
+            dest.writeInt(coverBlob.length);
+            dest.writeByteArray(coverBlob);
+        }
     }
 
     public final static Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>() {
