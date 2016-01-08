@@ -9,7 +9,12 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,9 +34,12 @@ import pt.ruiadrmartins.popularmovies.helper.TrailersFetchHelper;
  */
 public class TrailersActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    final static String LOG_TAG = TrailersActivityFragment.class.getSimpleName();
     final static String TRAILERS_MOVIE_ID = "trailersMovieId";
     final static String TRAILERS_MOVIE_URI = "trailersMovieURI";
     final static String TRAILER_PARCELABLE_KEY = "trailerData";
+
+    final static String YOUTUBE_VIDEO_LINK_PREFIX = "https://www.youtube.com/watch?v=";
 
     private ListView trailerListView;
     private TrailerAdapter adapter;
@@ -39,12 +47,18 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
     private TextView noTrailersFound;
     private ArrayList<Trailer> trailerList;
 
+    private ShareActionProvider mShareActionProvider;
+
     private static final int TRAILER_LOADER = 0;
 
     private int movieId;
     private Uri uri;
 
+    private String shareYoutubeUrl = "Check out this trailer: ";
+
+
     public TrailersActivityFragment() {
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -113,9 +127,6 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
      * @param trailer
      */
     public void startVideoIntent(Trailer trailer) {
-
-        final String YOUTUBE_VIDEO_LINK_PREFIX = "https://www.youtube.com/watch?v=";
-
         if(trailer.site.toLowerCase().equals("youtube")) {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(YOUTUBE_VIDEO_LINK_PREFIX + trailer.key));
 
@@ -147,6 +158,39 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
             adapter = new TrailerAdapter(getActivity(),new ArrayList<Trailer>());
             trailerListView.setAdapter(adapter);
             noTrailersFound.setText(getResources().getText(R.string.no_trailers_found));
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.menu_trailers, menu);
+
+        // Retrieve the share menu item
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+
+        // Get the provider and hold onto it to set/change the share intent.
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+
+        // Attach an intent to this ShareActionProvider.  You can update this at any time,
+        // like when the user selects a new piece of data they might like to share.
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(createShareTrailerIntent());
+        }
+    }
+
+    private Intent createShareTrailerIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareYoutubeUrl);
+        return shareIntent;
+    }
+
+    // Call to update the share intent
+    public void setShareIntent(Intent shareIntent) {
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(shareIntent);
         }
     }
 
@@ -191,6 +235,9 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
         cursorAdapter.swapCursor(data);
         if(data.moveToFirst()){
             noTrailersFound.setText("");
+            int keyIndex = data.getColumnIndex(MovieContract.TrailerEntry.COLUMN_KEY);
+            shareYoutubeUrl += YOUTUBE_VIDEO_LINK_PREFIX + data.getString(keyIndex);
+            setShareIntent(createShareTrailerIntent());
         } else {
             noTrailersFound.setText(getString(R.string.no_trailers_found));
         }
@@ -217,7 +264,13 @@ public class TrailersActivityFragment extends Fragment implements LoaderManager.
             if(list!=null && list.size()>0) {
                 trailerList = list;
                 noTrailersFound.setText("");
+                boolean first = true;
                 for (Trailer trailer: list) {
+                    if(first) {
+                        shareYoutubeUrl += YOUTUBE_VIDEO_LINK_PREFIX + trailer.key;
+                        setShareIntent(createShareTrailerIntent());
+                        first=false;
+                    }
                     adapter.add(trailer);
                 }
             }
